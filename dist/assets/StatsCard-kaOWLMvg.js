@@ -1,0 +1,6 @@
+import{c as l,j as s}from"./index-C2K3ThN6.js";import{C as x}from"./Card-Dn_FjzfW.js";import{T as m}from"./trending-up-CQcdLRYg.js";/**
+ * @license lucide-react v0.468.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const o=l("TrendingDown",[["polyline",{points:"22 17 13.5 8.5 8.5 13.5 2 7",key:"1r2t7k"}],["polyline",{points:"16 17 22 17 22 11",key:"11uiuu"}]]);function u({title:i,value:n,trend:e,trendDirection:t,icon:r,className:c}){const a=t==="up";return s.jsxs(x,{className:c,children:[s.jsxs("div",{className:"flex items-start justify-between",children:[s.jsxs("div",{children:[s.jsx("p",{className:"text-sm text-gray-500 mb-1",children:i}),s.jsx("p",{className:"text-3xl font-bold text-slate-900",children:n})]}),r&&s.jsx("div",{className:"w-10 h-10 rounded-xl bg-accent-light text-primary flex items-center justify-center",children:r})]}),e!==void 0&&t&&s.jsxs("div",{className:"mt-3 flex items-center gap-1.5",children:[a?s.jsx(m,{className:"w-4 h-4 text-success"}):s.jsx(o,{className:"w-4 h-4 text-error"}),s.jsxs("span",{className:`text-sm font-medium ${a?"text-success":"text-error"}`,children:[e,"%"]}),s.jsx("span",{className:"text-sm text-gray-400",children:"vs last week"})]})]})}export{u as S};

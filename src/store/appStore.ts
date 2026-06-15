@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { format } from 'date-fns';
+import type { Crew, Employee, ServiceType } from '@/types';
+import { crews as initialCrews } from '@/data/mockData';
 
 export interface AppState {
   // Sidebar
@@ -44,6 +46,13 @@ export interface AppState {
   setSelectedCustomerId: (id: string | null) => void;
   selectedJobId: string | null;
   setSelectedJobId: (id: string | null) => void;
+
+  // Crews management
+  crews: Crew[];
+  updateCrew: (crewId: string, updates: Partial<Pick<Crew, 'name' | 'serviceZone' | 'status' | 'specialties'>>) => void;
+  updateCrewMember: (crewId: string, memberId: string, updates: Partial<Pick<Employee, 'name' | 'role' | 'phone'>>) => void;
+  addCrewMember: (crewId: string, member: Employee) => void;
+  removeCrewMember: (crewId: string, memberId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -107,4 +116,40 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedCustomerId: (id) => set({ selectedCustomerId: id }),
   selectedJobId: null,
   setSelectedJobId: (id) => set({ selectedJobId: id }),
+
+  // Crews management
+  crews: initialCrews,
+  updateCrew: (crewId, updates) =>
+    set((state) => ({
+      crews: state.crews.map((c) =>
+        c.id === crewId ? { ...c, ...updates } : c,
+      ),
+    })),
+  updateCrewMember: (crewId, memberId, updates) =>
+    set((state) => ({
+      crews: state.crews.map((c) =>
+        c.id === crewId
+          ? {
+              ...c,
+              members: c.members.map((m) =>
+                m.id === memberId ? { ...m, ...updates } : m,
+              ),
+            }
+          : c,
+      ),
+    })),
+  addCrewMember: (crewId, member) =>
+    set((state) => ({
+      crews: state.crews.map((c) =>
+        c.id === crewId ? { ...c, members: [...c.members, member] } : c,
+      ),
+    })),
+  removeCrewMember: (crewId, memberId) =>
+    set((state) => ({
+      crews: state.crews.map((c) =>
+        c.id === crewId
+          ? { ...c, members: c.members.filter((m) => m.id !== memberId) }
+          : c,
+      ),
+    })),
 }));

@@ -1,1 +1,0 @@
-import{j as d,P as e,p as t}from"./index-CxLAY5pZ.js";const n={sm:"p-3",md:"p-5",lg:"p-7"};function p({children:r,className:s,padding:o="md",hover:a=!1}){return d.jsx("div",{className:e(t("bg-white rounded-xl shadow-card border border-gray-100",n[o],a&&"transition-shadow duration-200 hover:shadow-lg cursor-pointer"),s),children:r})}export{p as C};
