@@ -1,0 +1,270 @@
+import { Link } from 'react-router-dom';
+import {
+  CalendarCheck,
+  Users,
+  CloudRain,
+  DollarSign,
+  Plus,
+  Calendar,
+  ArrowRight,
+  CheckCircle2,
+  MessageSquare,
+  AlertTriangle,
+  TrendingUp,
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useDashboardStats, useDailyMetrics } from '@/hooks';
+import { useTodayJobs, useWeather } from '@/hooks';
+import { activities, crews } from '@/data/mockData';
+import { formatCurrency, getRelativeTime } from '@/lib/utils';
+import type { DashboardStats, Activity } from '@/types';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import Card from '@/components/ui/Card';
+
+function getWeatherImpactLabel(impact: DashboardStats['weatherImpact']): string {
+  switch (impact) {
+    case 'none': return 'No impact';
+    case 'low': return 'Low impact';
+    case 'moderate': return 'Moderate';
+    case 'high': return 'High impact';
+    default: return '';
+  }
+}
+
+function getActivityIcon(type: Activity['type']) {
+  switch (type) {
+    case 'job-completed': return { Icon: CheckCircle2, color: 'text-success' };
+    case 'message-sent': return { Icon: MessageSquare, color: 'text-primary' };
+    case 'weather-alert': return { Icon: AlertTriangle, color: 'text-warning' };
+    case 'payment-received': return { Icon: TrendingUp, color: 'text-primary' };
+    case 'customer-added': return { Icon: Users, color: 'text-primary' };
+    case 'reschedule': return { Icon: Calendar, color: 'text-warning' };
+    case 'crew-clockin': return { Icon: Users, color: 'text-success' };
+    default: return { Icon: CheckCircle2, color: 'text-slate-400' };
+  }
+}
+
+export default function Dashboard() {
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: todayJobs, isLoading: jobsLoading } = useTodayJobs();
+  const { data: weather, isLoading: weatherLoading } = useWeather();
+  const { data: metrics } = useDailyMetrics(7);
+
+  if (statsLoading || jobsLoading) {
+    return <LoadingSpinner fullPage label="Loading dashboard..." />;
+  }
+
+  const overviewCards = [
+    { label: 'Jobs Scheduled', value: String(stats?.todayJobs ?? 0), change: `${stats?.todayCompleted ?? 0} completed`, icon: CalendarCheck, color: 'bg-primary' },
+    { label: 'Crews Active', value: `${stats?.activeCrews ?? 0}/${stats?.totalCrews ?? 0}`, change: `${crews.filter(c => c.status === 'break').length} on break`, icon: Users, color: 'bg-success' },
+    { label: 'Weather Impact', value: getWeatherImpactLabel(stats?.weatherImpact ?? 'none'), change: `${stats?.pendingNotifications ?? 0} pending alerts`, icon: CloudRain, color: 'bg-warning' },
+    { label: 'Weekly Revenue', value: formatCurrency(stats?.weeklyRevenue ?? 0), change: `+${stats?.weeklyRevenueChange ?? 0}% vs last week`, icon: DollarSign, color: 'bg-primary-dark' },
+  ];
+
+  // Build schedule timeline from real today jobs, grouped by crew
+  type JobItem = NonNullable<typeof todayJobs>[number];
+  const crewGroups = new Map<string, JobItem[]>();
+  (todayJobs ?? []).forEach((job) => {
+    const existing = crewGroups.get(job.crewName) ?? [];
+    existing.push(job);
+    crewGroups.set(job.crewName, existing);
+  });
+
+  const timeSlots = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
+  // Weekly jobs chart from metrics
+  const weeklyJobsChart = (metrics ?? []).map((m) => ({
+    name: new Date(m.date).toLocaleDateString('en-US', { weekday: 'short' }),
+    jobs: m.jobsCompleted,
+  }));
+
+  // Recent activities (last 10)
+  const recentActivities = activities.slice(0, 8);
+
+  // Weather forecast
+  const forecast = weather?.forecast?.slice(0, 7) ?? [];
+
+  return (
+    <div className="space-y-6">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {overviewCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Card key={card.label}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-500 font-medium">{card.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
+                  <p className="text-xs text-slate-400 mt-1">{card.change}</p>
+                </div>
+                <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Quick Actions + Weather */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <Card>
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Quick Actions</h3>
+          <div className="space-y-2">
+            <Link
+              to="/customers"
+              className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors text-primary font-medium text-sm"
+            >
+              <Plus className="w-4 h-4" /> New Customer
+            </Link>
+            <Link
+              to="/schedule"
+              className="flex items-center gap-3 p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors text-success font-medium text-sm"
+            >
+              <Plus className="w-4 h-4" /> New Job
+            </Link>
+            <Link
+              to="/schedule"
+              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-slate-700 font-medium text-sm"
+            >
+              <Calendar className="w-4 h-4" /> View Full Schedule
+            </Link>
+          </div>
+        </Card>
+
+        {/* Weather Widget */}
+        <Card className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-900">Weather Forecast</h3>
+            <Link to="/weather" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+              Details <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          {weatherLoading ? (
+            <LoadingSpinner label="Loading weather..." />
+          ) : weather ? (
+            <>
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
+                <CloudRain className="w-12 h-12 text-warning" />
+                <div>
+                  <p className="text-3xl font-bold text-slate-900">{weather.current.temp}&#176;F</p>
+                  <p className="text-sm text-slate-500 capitalize">{weather.current.condition}, NE Ohio - Humidity {weather.current.humidity}%</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {forecast.map((day, idx) => {
+                  const isRisk = day.impact === 'moderate' || day.impact === 'high';
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex flex-col items-center p-2 rounded-xl ${isRisk ? 'bg-warning/10' : 'bg-slate-50'}`}
+                    >
+                      <span className="text-xs font-medium text-slate-500">
+                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-900 mt-1">{day.high}&#176;</span>
+                      <span className="text-xs text-slate-400">{day.precipChance}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
+        </Card>
+      </div>
+
+      {/* Today's Schedule Timeline */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-900">Today&apos;s Schedule</h3>
+          <Link to="/schedule" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+            Full Schedule <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px]">
+            {/* Time header */}
+            <div className="flex items-center mb-2">
+              <div className="w-24 flex-shrink-0" />
+              <div className="flex-1 flex">
+                {timeSlots.map((t) => (
+                  <div key={t} className="flex-1 text-xs text-slate-400 font-medium">
+                    {t > 12 ? `${t - 12}PM` : t === 12 ? '12PM' : `${t}AM`}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Crew rows */}
+            {Array.from(crewGroups.entries()).map(([crewName, jobs]) => (
+              <div key={crewName} className="flex items-center mb-2">
+                <div className="w-24 flex-shrink-0 text-xs font-semibold text-slate-600">{crewName}</div>
+                <div className="flex-1 relative h-8 bg-slate-50 rounded-lg">
+                  {jobs.map((job) => {
+                    const [startH, startM] = job.startTime.split(':').map(Number);
+                    const [endH, endM] = job.endTime.split(':').map(Number);
+                    const start = startH + startM / 60;
+                    const end = endH + endM / 60;
+                    const totalHours = timeSlots[timeSlots.length - 1] - timeSlots[0];
+                    const left = ((start - timeSlots[0]) / totalHours) * 100;
+                    const width = ((end - start) / totalHours) * 100;
+                    const color = job.status === 'completed' ? '#22C55E' : job.status === 'in-progress' ? '#F59E0B' : '#6366F1';
+                    return (
+                      <div
+                        key={job.id}
+                        className="absolute top-1 bottom-1 rounded-md flex items-center px-2 overflow-hidden"
+                        style={{ left: `${Math.max(0, left)}%`, width: `${Math.max(1, width)}%`, backgroundColor: color }}
+                        title={`${job.serviceType} - ${job.customerName}`}
+                      >
+                        <span className="text-[10px] text-white font-medium truncate">{job.customerName}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Activity Feed + Weekly Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Activity Feed */}
+        <Card>
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Activity</h3>
+          <div className="space-y-3" aria-live="polite">
+            {recentActivities.map((item) => {
+              const { Icon, color } = getActivityIcon(item.type);
+              return (
+                <div key={item.id} className="flex items-start gap-3">
+                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-700">{item.description}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{getRelativeTime(item.timestamp)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Weekly Jobs Chart */}
+        <Card>
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Jobs This Week</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={weeklyJobsChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94A3B8' }} />
+              <YAxis tick={{ fontSize: 12, fill: '#94A3B8' }} />
+              <Tooltip
+                contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }}
+              />
+              <Bar dataKey="jobs" fill="#6366F1" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
+    </div>
+  );
+}

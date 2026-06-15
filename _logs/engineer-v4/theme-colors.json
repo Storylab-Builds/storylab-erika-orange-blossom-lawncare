@@ -1,0 +1,19 @@
+{
+  "designSystem": {
+    "primary": "#6366F1",
+    "primaryDark": "#4F46E5",
+    "primaryDarker": "#4338CA",
+    "primaryLight": "#818CF8",
+    "accent": "#A5B4FC",
+    "accentMedium": "#C7D2FE",
+    "accentLight": "#E0E7FF",
+    "background": "#FFFFFF",
+    "text": "#0F172A",
+    "headingFont": "'Inter', sans-serif",
+    "letterSpacing": "-0.01em",
+    "borderRadius": "12px",
+    "darkMode": false,
+    "shadow": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06)"
+  },
+  "css": "--sl-primary: #6366F1;\n--sl-primary-dark: #4F46E5;\n--sl-primary-darker: #4338CA;\n--sl-primary-light: #818CF8;\n--sl-accent: #A5B4FC;\n--sl-accent-medium: #C7D2FE;\n--sl-accent-light: #E0E7FF;\n--sl-background: #FFFFFF;\n--sl-text: #0F172A;\n--sl-success: #22C55E;\n--sl-warning: #F59E0B;\n--sl-error: #EF4444;"
+}
