@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Leaf,
@@ -23,6 +23,10 @@ import {
   Sun,
   Menu,
   X,
+  Camera,
+  Award,
+  ThumbsUp,
+  Truck,
 } from 'lucide-react';
 
 const services = [
@@ -84,11 +88,81 @@ const faqs = [
   { q: 'Can I skip or pause my service?', a: 'Absolutely! You can pause, skip, or reschedule any visit through your online portal or by contacting us. We\'re flexible because we know life happens.' },
   { q: 'Are you licensed and insured?', a: 'Yes — we carry full commercial liability insurance and all required Ohio business licenses. Our team members are background-checked and professionally trained.' },
   { q: 'How do I get a custom quote?', a: 'Fill out the quote form on this page or call us at (330) 555-1234. We\'ll assess your property (often using satellite imagery) and send a detailed quote within 24 hours.' },
+  { q: 'Do you offer snow removal in winter?', a: 'Yes! Our Snow & Ice Management program covers plowing, salting, and ice management from November through March. Many of our lawn care customers bundle winter services for year-round property care at a discounted rate.' },
+  { q: 'What types of grass do you work with?', a: 'We specialize in cool-season grasses common to Northeastern Ohio: Kentucky Bluegrass, Perennial Ryegrass, Fine Fescue, and Tall Fescue blends. Our fertilization programs are customized to your specific turf type and soil conditions.' },
 ];
+
+const recentProjects = [
+  { title: 'Complete Landscape Overhaul', location: 'Hudson, OH', type: 'Landscaping', before: 'Overgrown beds, bare patches, no curb appeal', after: 'Fresh sod, native plantings, stone edging, mulched beds', duration: '3 days', sqft: '8,500' },
+  { title: 'Commercial Property Maintenance', location: 'Akron, OH', type: 'Full Service', before: 'Inconsistent mowing, neglected shrubs, weed-filled beds', after: 'Pristine grounds, shaped hedges, weed-free beds, fresh mulch', duration: 'Ongoing weekly', sqft: '22,000' },
+  { title: 'Seasonal Spring Cleanup', location: 'Stow, OH', type: 'Clean-up', before: 'Leaf debris, dead branches, compacted soil, dormant turf', after: 'Clean beds, aerated lawn, first fertilizer applied, vibrant green', duration: '1 day', sqft: '6,200' },
+  { title: 'Fertilization Recovery Program', location: 'Medina, OH', type: 'Fertilization', before: 'Thin, patchy lawn with heavy crabgrass and clover invasion', after: 'Thick, uniform turf — 90% weed reduction in one season', duration: '6 months', sqft: '11,000' },
+  { title: 'New Construction Sod Install', location: 'Canton, OH', type: 'Landscaping', before: 'Bare dirt and gravel from construction, no grading', after: 'Graded, topsoil added, fresh Kentucky Bluegrass sod, irrigation', duration: '2 days', sqft: '5,800' },
+  { title: 'Hedge & Shrub Restoration', location: 'Cuyahoga Falls, OH', type: 'Trimming', before: 'Overgrown boxwoods, misshapen arborvitae, blocked walkway', after: 'Crisp geometric shapes, clear sightlines, healthy regrowth', duration: '1 day', sqft: '1,200' },
+];
+
+const serviceAreas = [
+  { city: 'Akron', zip: '44301-44320', customers: 142, responseTime: 'Same day' },
+  { city: 'Canton', zip: '44701-44730', customers: 87, responseTime: 'Same day' },
+  { city: 'Hudson', zip: '44236', customers: 63, responseTime: 'Same day' },
+  { city: 'Stow', zip: '44224', customers: 51, responseTime: 'Same day' },
+  { city: 'Cuyahoga Falls', zip: '44221-44223', customers: 48, responseTime: 'Same day' },
+  { city: 'Kent', zip: '44240', customers: 35, responseTime: 'Next day' },
+  { city: 'Medina', zip: '44256', customers: 41, responseTime: 'Same day' },
+  { city: 'Wadsworth', zip: '44281', customers: 28, responseTime: 'Next day' },
+  { city: 'Barberton', zip: '44203', customers: 22, responseTime: 'Same day' },
+  { city: 'Green', zip: '44232', customers: 19, responseTime: 'Same day' },
+];
+
+function useCountUp(target: number, duration: number = 2000, startOnView: boolean = true) {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!startOnView) {
+      setHasStarted(true);
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !hasStarted) setHasStarted(true); },
+      { threshold: 0.3 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [hasStarted, startOnView]);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    let startTime: number;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [hasStarted, target, duration]);
+
+  return { count, ref };
+}
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' });
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [activeProject, setActiveProject] = useState(0);
+
+  const customersCount = useCountUp(500, 2000);
+  const yearsCount = useCountUp(8, 1500);
+  const jobsCount = useCountUp(15000, 2500);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitted(true);
+    setTimeout(() => setFormSubmitted(false), 5000);
+    setFormData({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -277,18 +351,26 @@ export default function Landing() {
       <section className="bg-slate-900 py-10 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: '500+', label: 'Happy Customers', icon: Users },
-              { value: '8+', label: 'Years Experience', icon: Calendar },
-              { value: '15K+', label: 'Jobs Completed', icon: CheckCircle2 },
-              { value: '4.9', label: 'Average Rating', icon: Star },
-            ].map((stat) => (
-              <div key={stat.label} className="flex flex-col items-center">
-                <stat.icon className="w-6 h-6 text-primary-light mb-2" />
-                <p className="text-3xl sm:text-4xl font-extrabold text-white">{stat.value}</p>
-                <p className="mt-1 text-sm text-slate-400">{stat.label}</p>
-              </div>
-            ))}
+            <div className="flex flex-col items-center" ref={customersCount.ref}>
+              <Users className="w-6 h-6 text-primary-light mb-2" />
+              <p className="text-3xl sm:text-4xl font-extrabold text-white">{customersCount.count}+</p>
+              <p className="mt-1 text-sm text-slate-400">Happy Customers</p>
+            </div>
+            <div className="flex flex-col items-center" ref={yearsCount.ref}>
+              <Calendar className="w-6 h-6 text-primary-light mb-2" />
+              <p className="text-3xl sm:text-4xl font-extrabold text-white">{yearsCount.count}+</p>
+              <p className="mt-1 text-sm text-slate-400">Years Experience</p>
+            </div>
+            <div className="flex flex-col items-center" ref={jobsCount.ref}>
+              <CheckCircle2 className="w-6 h-6 text-primary-light mb-2" />
+              <p className="text-3xl sm:text-4xl font-extrabold text-white">{(jobsCount.count / 1000).toFixed(jobsCount.count >= 1000 ? 0 : 1)}K+</p>
+              <p className="mt-1 text-sm text-slate-400">Jobs Completed</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <Star className="w-6 h-6 text-primary-light mb-2" />
+              <p className="text-3xl sm:text-4xl font-extrabold text-white">4.9</p>
+              <p className="mt-1 text-sm text-slate-400">Average Rating</p>
+            </div>
           </div>
         </div>
       </section>
@@ -370,7 +452,7 @@ export default function Landing() {
                   { icon: Users, title: 'Dedicated Crews', desc: 'The same trained team services your property every visit — they know your lawn inside and out.' },
                   { icon: BarChart3, title: 'Data-Driven Care', desc: 'We track soil health, growth patterns, and weather data to optimize every treatment for your turf type.' },
                   { icon: Clock, title: 'Reliable & Punctual', desc: '97% on-time rate. If weather forces a change, we notify you immediately and reschedule within 48 hours.' },
-                  { icon: Shield, title: 'Fully Licensed & Insured', desc: 'Complete commercial liability coverage and all required Florida licenses. Background-checked crews you can trust.' },
+                  { icon: Shield, title: 'Fully Licensed & Insured', desc: 'Complete commercial liability coverage and all required Ohio licenses. Background-checked crews you can trust.' },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-4 group">
                     <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-accent-light flex items-center justify-center group-hover:bg-primary/10 transition-colors">
@@ -443,6 +525,137 @@ export default function Landing() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Recent Projects */}
+      <section id="projects" className="py-20 sm:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Our Work</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Recent Projects</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Real transformations for real Northeastern Ohio properties. See the difference professional care makes.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-5 gap-8">
+            {/* Project selector */}
+            <div className="lg:col-span-2 space-y-2">
+              {recentProjects.map((project, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveProject(i)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
+                    activeProject === i
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className={`font-semibold text-sm ${activeProject === i ? 'text-primary' : 'text-slate-900'}`}>
+                        {project.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {project.location}
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      activeProject === i ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {project.type}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Project detail */}
+            <div className="lg:col-span-3">
+              <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                <div className="bg-gradient-to-br from-green-50 to-blue-50 p-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">{recentProjects[activeProject].title}</h3>
+                      <p className="text-sm text-slate-500">{recentProjects[activeProject].location}</p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4 mt-6">
+                    <div className="bg-white/80 rounded-xl p-4 border border-red-200/40">
+                      <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">Before</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">{recentProjects[activeProject].before}</p>
+                    </div>
+                    <div className="bg-white/80 rounded-xl p-4 border border-green-200/40">
+                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">After</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">{recentProjects[activeProject].after}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 flex items-center justify-between border-t border-slate-100">
+                  <div className="flex gap-6">
+                    <div>
+                      <p className="text-xs text-slate-500">Duration</p>
+                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].duration}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Area</p>
+                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].sqft} sq ft</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Type</p>
+                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].type}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4 text-green-500" />
+                    <span className="text-xs font-medium text-green-600">Customer Approved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Service Area */}
+      <section className="py-20 sm:py-28 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Coverage</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Serving Northeastern Ohio</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              From Akron to Canton and everywhere in between — we cover a 30-mile radius with same-day or next-day service.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {serviceAreas.map((area) => (
+              <div key={area.city} className="p-4 bg-white rounded-xl border border-slate-200 hover:border-primary/30 hover:shadow-md transition-all group">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                  <h4 className="font-semibold text-slate-900 text-sm">{area.city}</h4>
+                </div>
+                <p className="text-xs text-slate-500 mb-2">ZIP: {area.zip}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-600">{area.customers} customers</span>
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                    area.responseTime === 'Same day' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                  }`}>
+                    {area.responseTime}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <p className="text-sm text-slate-500">
+              <Truck className="w-4 h-4 inline mr-1" />
+              Total service area: <strong className="text-slate-700">536+ active customers</strong> across <strong className="text-slate-700">10 communities</strong>
+            </p>
           </div>
         </div>
       </section>
@@ -589,63 +802,89 @@ export default function Landing() {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Service area</p>
-                    <p className="font-medium">Orlando, Winter Park, Kissimmee & surrounding areas</p>
+                    <p className="font-medium">Akron, Canton, Hudson & surrounding NE Ohio</p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="bg-white/[0.07] backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-white/10">
               <h3 className="text-xl font-semibold text-white mb-6">Request a Free Quote</h3>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  />
+              {formSubmitted ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-green-400" />
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-2">Quote Request Received!</h4>
+                  <p className="text-slate-300 text-sm">We'll review your property and send a detailed quote within 24 hours. Check your email for confirmation.</p>
                 </div>
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-                <select
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                  defaultValue=""
-                >
-                  <option value="" disabled>Select a service...</option>
-                  <option value="mowing">Weekly Mowing</option>
-                  <option value="landscaping">Landscaping Design</option>
-                  <option value="cleanup">Seasonal Clean-up</option>
-                  <option value="fertilization">Fertilization & Weed Control</option>
-                  <option value="trimming">Shrub & Hedge Trimming</option>
-                  <option value="irrigation">Irrigation Management</option>
-                  <option value="full">Full-Service Plan</option>
-                </select>
-                <textarea
-                  rows={3}
-                  placeholder="Tell us about your property and what services you're interested in..."
-                  className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
-                />
-                <button
-                  type="submit"
-                  className="w-full py-3.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                >
-                  Send My Free Quote Request
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <p className="text-xs text-slate-500 text-center">No spam, no obligation. We typically respond within 2 hours.</p>
-              </form>
+              ) : (
+                <form className="space-y-4" onSubmit={handleFormSubmit}>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
+                  <select
+                    className={`w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${formData.service ? 'text-white' : 'text-slate-400'}`}
+                    value={formData.service}
+                    onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                    required
+                  >
+                    <option value="" disabled>Select a service...</option>
+                    <option value="mowing">Weekly Mowing</option>
+                    <option value="landscaping">Landscaping Design</option>
+                    <option value="cleanup">Seasonal Clean-up</option>
+                    <option value="fertilization">Fertilization & Weed Control</option>
+                    <option value="trimming">Shrub & Hedge Trimming</option>
+                    <option value="snow">Snow & Ice Management</option>
+                    <option value="full">Full-Service Plan</option>
+                  </select>
+                  <textarea
+                    rows={3}
+                    placeholder="Tell us about your property and what services you're interested in..."
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  >
+                    Send My Free Quote Request
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <p className="text-xs text-slate-500 text-center">No spam, no obligation. We typically respond within 2 hours.</p>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -663,7 +902,7 @@ export default function Landing() {
                 <span className="font-bold text-white">OBS Lawncare</span>
               </div>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Professional lawn care and landscaping services for Central Florida homeowners and businesses.
+                Professional lawn care and landscaping services for Northeastern Ohio homeowners and businesses.
               </p>
             </div>
             <div>
