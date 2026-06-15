@@ -49,6 +49,8 @@ export interface AppState {
 
   // Crews management
   crews: Crew[];
+  addCrew: (crew: Crew) => void;
+  removeCrew: (crewId: string) => void;
   updateCrew: (crewId: string, updates: Partial<Pick<Crew, 'name' | 'serviceZone' | 'status' | 'specialties'>>) => void;
   updateCrewMember: (crewId: string, memberId: string, updates: Partial<Pick<Employee, 'name' | 'role' | 'phone'>>) => void;
   addCrewMember: (crewId: string, member: Employee) => void;
@@ -119,6 +121,14 @@ export const useAppStore = create<AppState>((set) => ({
 
   // Crews management
   crews: initialCrews,
+  addCrew: (crew) =>
+    set((state) => ({
+      crews: [...state.crews, crew],
+    })),
+  removeCrew: (crewId) =>
+    set((state) => ({
+      crews: state.crews.filter((c) => c.id !== crewId),
+    })),
   updateCrew: (crewId, updates) =>
     set((state) => ({
       crews: state.crews.map((c) =>

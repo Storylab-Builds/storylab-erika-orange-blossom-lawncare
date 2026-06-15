@@ -9,9 +9,11 @@ import {
   Trash2,
   Save,
   X,
+  Plus,
+  Users,
 } from 'lucide-react';
 import { SERVICE_TYPES } from '@/lib/constants';
-import type { Crew, Employee, ServiceType } from '@/types';
+import type { Crew, Employee, Equipment, ServiceType } from '@/types';
 import { getInitials } from '@/lib/utils';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -206,16 +208,168 @@ function AddMemberModal({
   );
 }
 
+// --- Add Crew Modal ---
+
+const EQUIPMENT_TYPE_OPTIONS: { value: Equipment['type']; label: string }[] = [
+  { value: 'zero-turn-mower', label: 'Zero-Turn Mower' },
+  { value: 'stand-on-mower', label: 'Stand-On Mower' },
+  { value: 'dump-trailer', label: 'Dump Trailer' },
+  { value: 'skid-steer', label: 'Skid Steer' },
+  { value: 'snow-plow', label: 'Snow Plow' },
+  { value: 'leaf-blower', label: 'Leaf Blower' },
+  { value: 'edger', label: 'Edger' },
+  { value: 'trimmer', label: 'Trimmer' },
+];
+
+function AddCrewModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const addCrew = useAppStore((s) => s.addCrew);
+  const [name, setName] = useState('');
+  const [serviceZone, setServiceZone] = useState('');
+  const [specialties, setSpecialties] = useState<ServiceType[]>([]);
+  const [memberName, setMemberName] = useState('');
+  const [memberRole, setMemberRole] = useState<Employee['role']>('crew-lead');
+  const [memberPhone, setMemberPhone] = useState('');
+  const [members, setMembers] = useState<Employee[]>([]);
+
+  const toggleSpecialty = (s: ServiceType) => {
+    setSpecialties((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s],
+    );
+  };
+
+  const handleAddMember = () => {
+    if (!memberName.trim()) return;
+    setMembers((prev) => [
+      ...prev,
+      {
+        id: `emp-${Date.now()}-${prev.length}`,
+        name: memberName.trim(),
+        role: memberRole,
+        phone: memberPhone.trim(),
+        clockedIn: false,
+        onBreak: false,
+      },
+    ]);
+    setMemberName('');
+    setMemberPhone('');
+    setMemberRole('technician');
+  };
+
+  const handleRemoveMember = (id: string) => {
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    const newCrew: Crew = {
+      id: `crew-${Date.now()}`,
+      name: name.trim(),
+      serviceZone: serviceZone.trim() || 'Unassigned',
+      specialties,
+      members,
+      equipment: [],
+      status: 'available',
+      todayJobsCount: 0,
+      todayJobsCompleted: 0,
+      efficiency: 0,
+    };
+    addCrew(newCrew);
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Crew" size="lg">
+      <div className="space-y-4">
+        <Input label="Crew Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alpha Crew" />
+        <Input label="Service Zone" value={serviceZone} onChange={(e) => setServiceZone(e.target.value)} placeholder="e.g. North Canton / Green" />
+
+        <div>
+          <p className="block text-sm font-medium text-slate-700 mb-1.5">Specialties</p>
+          <div className="flex flex-wrap gap-2">
+            {ALL_SPECIALTIES.map((sp) => {
+              const active = specialties.includes(sp.value);
+              return (
+                <button
+                  key={sp.value}
+                  type="button"
+                  onClick={() => toggleSpecialty(sp.value)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    active
+                      ? 'bg-primary/10 border-primary text-primary'
+                      : 'bg-white border-gray-200 text-slate-500 hover:border-gray-300'
+                  }`}
+                >
+                  {sp.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Inline member builder */}
+        <div>
+          <p className="block text-sm font-medium text-slate-700 mb-1.5">Crew Members</p>
+          {members.length > 0 && (
+            <div className="space-y-1.5 mb-3">
+              {members.map((m) => (
+                <div key={m.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary">
+                      {getInitials(m.name)}
+                    </div>
+                    <span className="text-slate-700">{m.name}</span>
+                    <span className="text-xs text-slate-400">({m.role})</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveMember(m.id)}
+                    className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 items-end">
+            <Input label="" value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="Member name" />
+            <Select options={ROLE_OPTIONS} value={memberRole} onChange={(v) => setMemberRole(v as Employee['role'])} />
+            <Input label="" value={memberPhone} onChange={(e) => setMemberPhone(e.target.value)} placeholder="Phone" />
+            <Button variant="secondary" size="sm" onClick={handleAddMember} disabled={!memberName.trim()}>
+              <UserPlus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button icon={<Plus className="w-4 h-4" />} onClick={handleSave} disabled={!name.trim()}>
+            Create Crew
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // --- Main Crews Page ---
 
 export default function Crews() {
   const crews = useAppStore((s) => s.crews);
   const removeCrewMember = useAppStore((s) => s.removeCrewMember);
+  const removeCrew = useAppStore((s) => s.removeCrew);
 
   const [editingCrew, setEditingCrew] = useState<Crew | null>(null);
   const [editingMember, setEditingMember] = useState<{ crewId: string; member: Employee } | null>(null);
   const [addingMemberCrewId, setAddingMemberCrewId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<{ crewId: string; member: Employee } | null>(null);
+  const [showAddCrew, setShowAddCrew] = useState(false);
+  const [confirmDeleteCrew, setConfirmDeleteCrew] = useState<Crew | null>(null);
 
   const activeCrews = crews.filter((c) => c.status !== 'off-duty').length;
   const totalMembers = crews.reduce((s, c) => s + c.members.length, 0);
@@ -223,12 +377,19 @@ export default function Crews() {
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatsCard title="Total Crews" value={crews.length} />
-        <StatsCard title="Active Now" value={activeCrews} />
-        <StatsCard title="Team Members" value={totalMembers} />
-        <StatsCard title="Avg Efficiency" value={`${avgEfficiency}%`} />
+      {/* Summary + Add Crew button */}
+      <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-1">
+          <StatsCard title="Total Crews" value={crews.length} />
+          <StatsCard title="Active Now" value={activeCrews} />
+          <StatsCard title="Team Members" value={totalMembers} />
+          <StatsCard title="Avg Efficiency" value={`${avgEfficiency}%`} />
+        </div>
+        <div className="ml-4 shrink-0">
+          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setShowAddCrew(true)}>
+            Add Crew
+          </Button>
+        </div>
       </div>
 
       {/* Crew Cards */}
@@ -255,6 +416,13 @@ export default function Crews() {
                     title="Edit crew"
                   >
                     <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteCrew(crew)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    title="Delete crew"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-slate-900">{crew.todayJobsCompleted}/{crew.todayJobsCount}</p>

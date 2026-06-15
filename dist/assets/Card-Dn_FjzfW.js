@@ -1,1 +1,0 @@
-import{j as d,t,i as e}from"./index-C2K3ThN6.js";const i={sm:"p-3",md:"p-5",lg:"p-7"};function p({children:r,className:s,padding:o="md",hover:a=!1}){return d.jsx("div",{className:t(e("bg-white rounded-xl shadow-card border border-gray-100",i[o],a&&"transition-shadow duration-200 hover:shadow-lg cursor-pointer"),s),children:r})}export{p as C};
