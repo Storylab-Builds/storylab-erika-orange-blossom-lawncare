@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Leaf,
@@ -27,7 +27,31 @@ import {
   Award,
   ThumbsUp,
   Truck,
+  TrendingUp,
+  Droplets,
+  Wind,
+  Thermometer,
+  CircleDot,
+  Wrench,
+  Calculator,
+  Snowflake,
+  CloudRain,
+  SunMedium,
+  Sprout,
+  Activity,
 } from 'lucide-react';
+import {
+  crews,
+  todayJobs,
+  customers,
+  weatherData,
+  dailyMetrics,
+  dashboardStats,
+  employees,
+  equipment,
+  notifications,
+  activities,
+} from '@/data/mockData';
 
 const services = [
   { name: 'Weekly Mowing', desc: 'Precision cut with striping patterns for a professional finish every time.', icon: Leaf, color: 'bg-green-500' },
@@ -114,6 +138,34 @@ const serviceAreas = [
   { city: 'Green', zip: '44232', customers: 19, responseTime: 'Same day' },
 ];
 
+const seasonalServices = [
+  { month: 'Mar', services: ['Spring Clean-up', 'First Mowing', 'Pre-emergent Application'], icon: Sprout, color: 'text-green-500', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
+  { month: 'Apr-May', services: ['Weekly Mowing Begins', 'Fertilization Round 1', 'Bed Maintenance', 'Mulching'], icon: Flower2, color: 'text-pink-500', bgColor: 'bg-pink-50', borderColor: 'border-pink-200' },
+  { month: 'Jun-Aug', services: ['Weekly Mowing', 'Weed Control', 'Shrub Trimming', 'Irrigation Monitoring'], icon: SunMedium, color: 'text-amber-500', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
+  { month: 'Sep-Oct', services: ['Fall Aeration', 'Overseeding', 'Fertilization Round 4', 'Leaf Removal'], icon: TreePine, color: 'text-orange-500', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' },
+  { month: 'Nov', services: ['Final Mowing', 'Fall Clean-up', 'Winterization', 'Snow Prep'], icon: Wind, color: 'text-slate-500', bgColor: 'bg-slate-50', borderColor: 'border-slate-200' },
+  { month: 'Dec-Feb', services: ['Snow Plowing', 'Ice Management', 'Salting', 'Emergency Response'], icon: Snowflake, color: 'text-blue-500', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' },
+];
+
+const lotSizeOptions = [
+  { label: 'Small (< 5,000 sq ft)', value: 'small', multiplier: 0.7 },
+  { label: 'Standard (5,000-10,000 sq ft)', value: 'standard', multiplier: 1.0 },
+  { label: 'Large (10,000-20,000 sq ft)', value: 'large', multiplier: 1.5 },
+  { label: 'Estate (20,000+ sq ft)', value: 'estate', multiplier: 2.5 },
+];
+
+const estimatorServices = [
+  { name: 'Weekly Mowing', basePrice: 45, id: 'mowing' },
+  { name: 'Bi-Weekly Mowing', basePrice: 45, id: 'biweekly-mowing' },
+  { name: 'Fertilization (per application)', basePrice: 65, id: 'fertilization' },
+  { name: 'Shrub Trimming (monthly)', basePrice: 90, id: 'shrub-trimming' },
+  { name: 'Bed Maintenance (bi-weekly)', basePrice: 75, id: 'bed-maintenance' },
+  { name: 'Spring Clean-up', basePrice: 250, id: 'spring-cleanup' },
+  { name: 'Fall Clean-up', basePrice: 275, id: 'fall-cleanup' },
+  { name: 'Mulching (per application)', basePrice: 200, id: 'mulching' },
+  { name: 'Snow Removal (per event)', basePrice: 125, id: 'snow-removal' },
+];
+
 function useCountUp(target: number, duration: number = 2000, startOnView: boolean = true) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -152,8 +204,75 @@ export default function Landing() {
   const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [activeProject, setActiveProject] = useState(0);
+  const [selectedLotSize, setSelectedLotSize] = useState('standard');
+  const [selectedEstimatorServices, setSelectedEstimatorServices] = useState<string[]>(['mowing']);
+  const [activeSeason, setActiveSeason] = useState(2); // Jun-Aug default for mid-June
 
-  const customersCount = useCountUp(500, 2000);
+  // Computed live data from mockData
+  const liveData = useMemo(() => {
+    const activeCustomerCount = customers.filter(c => c.status === 'active').length;
+    const completedToday = todayJobs.filter(j => j.status === 'completed').length;
+    const inProgressToday = todayJobs.filter(j => j.status === 'in-progress').length;
+    const scheduledToday = todayJobs.filter(j => j.status === 'scheduled').length;
+    const last7Revenue = dailyMetrics.slice(-7).reduce((sum, d) => sum + d.revenue, 0);
+    const prev7Revenue = dailyMetrics.slice(-14, -7).reduce((sum, d) => sum + d.revenue, 0);
+    const revenueChange = prev7Revenue > 0 ? ((last7Revenue - prev7Revenue) / prev7Revenue * 100) : 0;
+    const avgSatisfaction = dailyMetrics.slice(-7).reduce((sum, d) => sum + d.customerSatisfaction, 0) / 7;
+    const avgUtilization = Math.round(dailyMetrics.slice(-7).reduce((sum, d) => sum + d.crewUtilization, 0) / 7);
+    const clockedInCount = employees.filter(e => e.clockedIn).length;
+    const equipmentInUse = equipment.filter(e => e.status === 'in-use').length;
+    const recentNotifications = notifications.slice(0, 5);
+    const recentActivities = activities.slice(0, 8);
+
+    return {
+      activeCustomerCount,
+      completedToday,
+      inProgressToday,
+      scheduledToday,
+      totalToday: todayJobs.length,
+      last7Revenue,
+      revenueChange: revenueChange.toFixed(1),
+      avgSatisfaction: avgSatisfaction.toFixed(1),
+      avgUtilization,
+      clockedInCount,
+      totalEmployees: employees.length,
+      equipmentInUse,
+      totalEquipment: equipment.length,
+      recentNotifications,
+      recentActivities,
+      weatherCurrent: weatherData.current,
+      weatherForecast: weatherData.forecast.slice(0, 5),
+      weatherAlerts: weatherData.alerts,
+    };
+  }, []);
+
+  const estimatedCost = useMemo(() => {
+    const lotMultiplier = lotSizeOptions.find(l => l.value === selectedLotSize)?.multiplier ?? 1;
+    const monthlyServices = selectedEstimatorServices.reduce((total, svcId) => {
+      const svc = estimatorServices.find(s => s.id === svcId);
+      if (!svc) return total;
+      const adjusted = Math.round(svc.basePrice * lotMultiplier);
+      if (svcId === 'mowing') return total + (adjusted * 4.3); // weekly
+      if (svcId === 'biweekly-mowing') return total + (adjusted * 2.15);
+      if (svcId === 'bed-maintenance') return total + (adjusted * 2);
+      return total + adjusted;
+    }, 0);
+    return Math.round(monthlyServices);
+  }, [selectedLotSize, selectedEstimatorServices]);
+
+  const toggleEstimatorService = (id: string) => {
+    setSelectedEstimatorServices(prev => {
+      if (id === 'mowing' && prev.includes('biweekly-mowing')) {
+        return [...prev.filter(s => s !== 'biweekly-mowing'), id];
+      }
+      if (id === 'biweekly-mowing' && prev.includes('mowing')) {
+        return [...prev.filter(s => s !== 'mowing'), id];
+      }
+      return prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id];
+    });
+  };
+
+  const customersCount = useCountUp(customers.filter(c => c.status === 'active').length, 2000);
   const yearsCount = useCountUp(8, 1500);
   const jobsCount = useCountUp(15000, 2500);
 
@@ -375,6 +494,251 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Live Operations Dashboard Preview */}
+      <section className="py-20 sm:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Smart Operations</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">See How We Run — In Real Time</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Our intelligent platform manages every crew, every job, every forecast — so your lawn gets the attention it deserves.
+            </p>
+          </div>
+
+          {/* Dashboard Grid */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Today's Operations Card */}
+            <div className="bg-slate-900 rounded-2xl p-6 text-white col-span-1">
+              <div className="flex items-center gap-2 mb-5">
+                <Activity className="w-5 h-5 text-primary-light" />
+                <h3 className="font-semibold text-sm">Today's Operations</h3>
+                <span className="ml-auto text-xs text-emerald-400 flex items-center gap-1">
+                  <CircleDot className="w-2.5 h-2.5 animate-pulse" /> Live
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-white/10 rounded-xl p-3">
+                  <p className="text-2xl font-bold">{liveData.totalToday}</p>
+                  <p className="text-xs text-slate-400">Jobs Scheduled</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3">
+                  <p className="text-2xl font-bold text-emerald-400">{liveData.completedToday}</p>
+                  <p className="text-xs text-slate-400">Completed</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3">
+                  <p className="text-2xl font-bold text-amber-400">{liveData.inProgressToday}</p>
+                  <p className="text-xs text-slate-400">In Progress</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3">
+                  <p className="text-2xl font-bold text-blue-400">{liveData.scheduledToday}</p>
+                  <p className="text-xs text-slate-400">Upcoming</p>
+                </div>
+              </div>
+
+              {/* Crew Status */}
+              <div className="space-y-2.5">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">Active Crews</p>
+                {crews.map(crew => (
+                  <div key={crew.id} className="flex items-center gap-3 bg-white/5 rounded-lg p-2.5">
+                    <div className={`w-2 h-2 rounded-full ${crew.status === 'on-job' ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{crew.name}</p>
+                      <p className="text-xs text-slate-400">{crew.serviceZone}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium">{crew.todayJobsCompleted}/{crew.todayJobsCount}</p>
+                      <div className="w-16 h-1.5 bg-white/10 rounded-full mt-1">
+                        <div
+                          className="h-full bg-emerald-400 rounded-full transition-all"
+                          style={{ width: `${(crew.todayJobsCompleted / crew.todayJobsCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Weather & Forecast Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
+              <div className="flex items-center gap-2 mb-5">
+                <CloudSun className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-sm text-slate-900">Weather-Smart Scheduling</h3>
+              </div>
+              {/* Current Weather */}
+              <div className="flex items-center gap-4 mb-5 bg-white/60 rounded-xl p-4 border border-blue-100/60">
+                <div className="text-center">
+                  <Thermometer className="w-6 h-6 text-orange-500 mx-auto" />
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{liveData.weatherCurrent.temp}°</p>
+                  <p className="text-xs text-slate-500">Feels {liveData.weatherCurrent.feelsLike}°</p>
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="text-xs text-slate-600">{liveData.weatherCurrent.humidity}% humidity</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Wind className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-xs text-slate-600">{liveData.weatherCurrent.windSpeed} mph</span>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-xs font-medium text-slate-700 capitalize">{liveData.weatherCurrent.condition}</p>
+                    <p className="text-xs text-slate-500">Akron, OH</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5-Day Forecast */}
+              <div className="space-y-2">
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">5-Day Impact Forecast</p>
+                {liveData.weatherForecast.map((day, i) => (
+                  <div key={day.date} className="flex items-center gap-3 text-sm">
+                    <span className="w-8 text-xs font-medium text-slate-500">
+                      {i === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                    </span>
+                    <div className="flex-1 flex items-center gap-2">
+                      {day.precipChance > 50 ? (
+                        <CloudRain className="w-4 h-4 text-blue-500" />
+                      ) : day.precipChance > 25 ? (
+                        <CloudSun className="w-4 h-4 text-slate-400" />
+                      ) : (
+                        <Sun className="w-4 h-4 text-amber-400" />
+                      )}
+                      <span className="text-xs text-slate-700">{day.condition}</span>
+                    </div>
+                    <span className="text-xs text-slate-600">{day.high}°/{day.low}°</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                      day.impact === 'none' ? 'bg-green-100 text-green-700' :
+                      day.impact === 'low' ? 'bg-amber-100 text-amber-700' :
+                      day.impact === 'moderate' ? 'bg-orange-100 text-orange-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {day.precipChance}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Weather Alerts */}
+              {liveData.weatherAlerts.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {liveData.weatherAlerts.map(alert => (
+                    <div key={alert.id} className={`p-3 rounded-lg text-xs ${
+                      alert.severity === 'warning' ? 'bg-red-100 text-red-800 border border-red-200' :
+                      alert.severity === 'watch' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                      'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
+                      <p className="font-semibold">{alert.title}</p>
+                      <p className="mt-0.5 leading-relaxed">{alert.description}</p>
+                      {alert.affectedJobs > 0 && (
+                        <p className="mt-1 font-medium">{alert.affectedJobs} jobs auto-rescheduled</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Weekly Performance Card */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-200">
+              <div className="flex items-center gap-2 mb-5">
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-semibold text-sm text-slate-900">This Week's Performance</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-emerald-700">Weekly Revenue</p>
+                    <span className="text-xs font-medium text-emerald-600 flex items-center gap-0.5">
+                      <TrendingUp className="w-3 h-3" />
+                      +{liveData.revenueChange}%
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-900 mt-1">${liveData.last7Revenue.toLocaleString()}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-xs text-slate-500">Avg Satisfaction</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span className="text-lg font-bold text-slate-900">{liveData.avgSatisfaction}</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-xs text-slate-500">Crew Utilization</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.avgUtilization}%</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-xs text-slate-500">Staff On Duty</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.clockedInCount}/{liveData.totalEmployees}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <p className="text-xs text-slate-500">Equipment Active</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.equipmentInUse}/{liveData.totalEquipment}</p>
+                  </div>
+                </div>
+
+                {/* Mini Revenue Chart */}
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">7-Day Revenue</p>
+                  <div className="flex items-end gap-1 h-16">
+                    {dailyMetrics.slice(-7).map((day, i) => {
+                      const max = Math.max(...dailyMetrics.slice(-7).map(d => d.revenue));
+                      const height = (day.revenue / max) * 100;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div
+                            className="w-full bg-primary/20 rounded-sm hover:bg-primary/40 transition-colors relative group"
+                            style={{ height: `${height}%` }}
+                          >
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              ${day.revenue.toLocaleString()}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'narrow' })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Live Activity</p>
+                  <div className="space-y-1.5 max-h-32 overflow-hidden">
+                    {liveData.recentActivities.slice(0, 4).map(act => (
+                      <div key={act.id} className="flex items-start gap-2 text-xs">
+                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                          act.type === 'job-completed' ? 'bg-emerald-400' :
+                          act.type === 'payment-received' ? 'bg-blue-400' :
+                          act.type === 'weather-alert' ? 'bg-amber-400' :
+                          'bg-slate-300'
+                        }`} />
+                        <p className="text-slate-600 leading-relaxed line-clamp-1">{act.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all shadow-sm hover:shadow-md"
+            >
+              Explore Full Dashboard
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Services Section */}
       <section id="services" className="py-20 sm:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -490,6 +854,153 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Meet Our Crews */}
+      <section className="py-20 sm:py-28 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Our Team</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Meet Your Dedicated Crews</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Every property gets a consistent crew that knows your lawn. {employees.filter(e => e.clockedIn).length} team members serving {customers.filter(c => c.status === 'active').length} active customers today.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {crews.map(crew => (
+              <div key={crew.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group">
+                <div className="bg-gradient-to-r from-primary/10 to-green-500/10 p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-bold text-slate-900">{crew.name}</h3>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                      crew.status === 'on-job' ? 'bg-emerald-100 text-emerald-700' :
+                      crew.status === 'available' ? 'bg-blue-100 text-blue-700' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>
+                      {crew.status === 'on-job' ? 'On Job' : crew.status === 'available' ? 'Available' : 'Off Duty'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                    {crew.serviceZone}
+                  </p>
+                </div>
+                <div className="p-5">
+                  {/* Members */}
+                  <div className="mb-4">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Team Members</p>
+                    <div className="space-y-2">
+                      {crew.members.map(member => (
+                        <div key={member.id} className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
+                            <p className="text-xs text-slate-500 capitalize">{member.role.replace('-', ' ')}</p>
+                          </div>
+                          {member.clockedIn && (
+                            <div className="w-2 h-2 rounded-full bg-emerald-400" title="Clocked In" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Specialties */}
+                  <div className="mb-4">
+                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Specialties</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {crew.specialties.slice(0, 4).map(spec => (
+                        <span key={spec} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full capitalize">
+                          {spec.replace('-', ' ')}
+                        </span>
+                      ))}
+                      {crew.specialties.length > 4 && (
+                        <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">
+                          +{crew.specialties.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Today's Progress */}
+                  <div className="pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs text-slate-500">Today's Progress</p>
+                      <p className="text-xs font-medium text-slate-700">{crew.todayJobsCompleted}/{crew.todayJobsCount} jobs</p>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full transition-all"
+                        style={{ width: `${(crew.todayJobsCompleted / crew.todayJobsCount) * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-slate-500">{crew.efficiency}% efficiency</span>
+                      <span className="text-xs text-slate-500">{crew.equipment.length} equipment</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Seasonal Calendar */}
+      <section className="py-20 sm:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Year-Round Care</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Your Lawn, Every Season</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Northeast Ohio's climate demands a year-round approach. Here's how we care for your property through every season.
+            </p>
+          </div>
+
+          {/* Season tabs */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {seasonalServices.map((season, i) => (
+              <button
+                key={season.month}
+                onClick={() => setActiveSeason(i)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeSeason === i
+                    ? `${season.bgColor} ${season.color} border ${season.borderColor} shadow-sm`
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <season.icon className="w-4 h-4" />
+                {season.month}
+              </button>
+            ))}
+          </div>
+
+          {/* Active season detail */}
+          <div className={`max-w-3xl mx-auto rounded-2xl p-8 border ${seasonalServices[activeSeason].borderColor} ${seasonalServices[activeSeason].bgColor}`}>
+            <div className="flex items-center gap-3 mb-6">
+              {(() => {
+                const SeasonIcon = seasonalServices[activeSeason].icon;
+                return <SeasonIcon className={`w-8 h-8 ${seasonalServices[activeSeason].color}`} />;
+              })()}
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">{seasonalServices[activeSeason].month}</h3>
+                <p className="text-sm text-slate-600">Scheduled services for this period</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {seasonalServices[activeSeason].services.map((service, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white/80 rounded-xl p-4 border border-white">
+                  <CheckCircle2 className={`w-5 h-5 ${seasonalServices[activeSeason].color} flex-shrink-0`} />
+                  <span className="text-sm font-medium text-slate-800">{service}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -718,8 +1229,138 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Cost Estimator */}
+      <section id="estimator" className="py-20 sm:py-28 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Estimate</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Build Your Custom Quote</h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Select your lot size and services to get an instant monthly estimate. No commitment required.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto grid lg:grid-cols-5 gap-8">
+            {/* Service & Lot Selector */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Lot Size */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-primary" />
+                  1. Select Your Lot Size
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {lotSizeOptions.map(lot => (
+                    <button
+                      key={lot.value}
+                      onClick={() => setSelectedLotSize(lot.value)}
+                      className={`p-4 rounded-xl border text-left transition-all ${
+                        selectedLotSize === lot.value
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <p className={`text-sm font-semibold ${selectedLotSize === lot.value ? 'text-primary' : 'text-slate-900'}`}>
+                        {lot.label}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">{lot.multiplier}x base price</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Services */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Wrench className="w-5 h-5 text-primary" />
+                  2. Choose Your Services
+                </h3>
+                <div className="space-y-2">
+                  {estimatorServices.map(svc => {
+                    const isSelected = selectedEstimatorServices.includes(svc.id);
+                    const lotMultiplier = lotSizeOptions.find(l => l.value === selectedLotSize)?.multiplier ?? 1;
+                    const adjustedPrice = Math.round(svc.basePrice * lotMultiplier);
+                    return (
+                      <button
+                        key={svc.id}
+                        onClick={() => toggleEstimatorService(svc.id)}
+                        className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                            isSelected ? 'border-primary bg-primary' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                          <span className={`text-sm font-medium ${isSelected ? 'text-primary' : 'text-slate-700'}`}>
+                            {svc.name}
+                          </span>
+                        </div>
+                        <span className="text-sm text-slate-500">${adjustedPrice}/visit</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Estimate Summary */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-24">
+                <h3 className="font-semibold text-slate-900 mb-4">Your Estimate</h3>
+                <div className="space-y-3 mb-6">
+                  {selectedEstimatorServices.map(svcId => {
+                    const svc = estimatorServices.find(s => s.id === svcId);
+                    if (!svc) return null;
+                    const lotMultiplier = lotSizeOptions.find(l => l.value === selectedLotSize)?.multiplier ?? 1;
+                    const adjustedPrice = Math.round(svc.basePrice * lotMultiplier);
+                    const monthlyTotal = svcId === 'mowing' ? adjustedPrice * 4.3
+                      : svcId === 'biweekly-mowing' ? adjustedPrice * 2.15
+                      : svcId === 'bed-maintenance' ? adjustedPrice * 2
+                      : adjustedPrice;
+                    return (
+                      <div key={svcId} className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">{svc.name}</span>
+                        <span className="font-medium text-slate-900">${Math.round(monthlyTotal)}</span>
+                      </div>
+                    );
+                  })}
+                  {selectedEstimatorServices.length === 0 && (
+                    <p className="text-sm text-slate-400 text-center py-4">Select services to see estimate</p>
+                  )}
+                </div>
+                {selectedEstimatorServices.length > 0 && (
+                  <>
+                    <div className="border-t border-slate-200 pt-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900">Est. Monthly Total</span>
+                        <span className="text-2xl font-extrabold text-primary">${estimatedCost}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Based on {lotSizeOptions.find(l => l.value === selectedLotSize)?.label} lot
+                      </p>
+                    </div>
+                    <a
+                      href="#contact"
+                      className="block w-full py-3 bg-primary text-white text-sm font-semibold rounded-xl text-center hover:bg-primary-dark transition-all shadow-sm hover:shadow-md"
+                    >
+                      Get Exact Quote
+                    </a>
+                    <p className="text-xs text-slate-500 text-center mt-2">Final pricing may vary based on property assessment</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
-      <section id="faq" className="py-20 sm:py-28 bg-slate-50">
+      <section id="faq" className="py-20 sm:py-28 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">FAQ</span>
