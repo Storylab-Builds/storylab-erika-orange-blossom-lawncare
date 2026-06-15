@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --sl-primary: #6366F1;
-  --sl-primary-dark: #4F46E5;
-  --sl-primary-darker: #4338CA;
-  --sl-primary-light: #818CF8;
-  --sl-accent: #A5B4FC;
-  --sl-accent-medium: #C7D2FE;
-  --sl-accent-light: #E0E7FF;
+  --sl-primary: #3B82F6;
+  --sl-primary-dark: #2563EB;
+  --sl-primary-darker: #1D4ED8;
+  --sl-primary-light: #60A5FA;
+  --sl-accent: #93C5FD;
+  --sl-accent-medium: #BFDBFE;
+  --sl-accent-light: #DBEAFE;
   --sl-background: #FFFFFF;
   --sl-text: #0F172A;
   --sl-success: #22C55E;
@@ -59,7 +59,7 @@ textarea,
 
 /* Focus visible ring */
 *:focus-visible {
-  outline: 2px solid #6366F1;
+  outline: 2px solid #3B82F6;
   outline-offset: 2px;
   border-radius: 4px;
 }
