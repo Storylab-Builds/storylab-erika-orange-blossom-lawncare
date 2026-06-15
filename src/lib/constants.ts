@@ -45,7 +45,7 @@ export const WEATHER_THRESHOLDS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { path: '/', label: 'Dashboard', icon: 'LayoutDashboard' },
+  { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
   { path: '/customers', label: 'Customers', icon: 'Users' },
   { path: '/schedule', label: 'Schedule', icon: 'Calendar' },
   { path: '/crews', label: 'Crews', icon: 'HardHat' },

@@ -28,7 +28,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
   '/customers': 'Customers',
   '/schedule': 'Schedule',
   '/crews': 'Crews',
@@ -71,10 +71,7 @@ export default function AppLayout() {
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
           {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.path === '/'
-                ? currentPath === '/'
-                : currentPath.startsWith(item.path);
+            const isActive = currentPath.startsWith(item.path);
             const Icon = iconMap[item.icon] || LayoutDashboard;
             return (
               <Link

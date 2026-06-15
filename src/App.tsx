@@ -5,6 +5,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './layouts/AppLayout';
 import LoadingSpinner from './components/LoadingSpinner';
 
+const Landing = lazy(() => import('./pages/Landing'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Customers = lazy(() => import('./pages/Customers'));
 const CustomerDetail = lazy(() => import('./pages/CustomerDetail'));
@@ -25,8 +26,9 @@ export default function App() {
         <HashRouter>
           <Suspense fallback={<LoadingSpinner fullPage size="lg" label="Loading..." />}>
             <Routes>
+              <Route index element={<Landing />} />
               <Route element={<AppLayout />}>
-                <Route index element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customers/:id" element={<CustomerDetail />} />
                 <Route path="/schedule" element={<Schedule />} />
