@@ -21,17 +21,7 @@ export default function Reports() {
   const { data: crewUtilData, isLoading: crewLoading } = useCrewUtilization();
   const { data: customers } = useCustomers();
 
-  if (metricsLoading || revenueLoading) {
-    return <LoadingSpinner fullPage label="Loading reports..." />;
-  }
-
-  const totalJobsCompleted = metrics?.reduce((sum, m) => sum + m.jobsCompleted, 0) ?? 0;
-  const avgEfficiency = metrics
-    ? Math.round(metrics.reduce((sum, m) => sum + m.crewUtilization, 0) / metrics.length)
-    : 0;
-  const activeCustomerCount = (customers ?? []).filter((c) => c.status === 'active').length;
-
-  // Revenue chart data (memoized on stable query data to avoid Recharts re-animation)
+  // Chart data — these useMemo hooks MUST run before any early return (Rules of Hooks).
   const revenueChartData = useMemo(
     () =>
       (revenueData ?? []).map((d) => ({
@@ -41,7 +31,6 @@ export default function Reports() {
     [revenueData],
   );
 
-  // Weekly grouped jobs data
   const weeklyJobsData = useMemo(() => {
     const out: { week: string; completed: number; scheduled: number }[] = [];
     if (metrics) {
@@ -58,6 +47,16 @@ export default function Reports() {
     }
     return out;
   }, [metrics]);
+
+  if (metricsLoading || revenueLoading) {
+    return <LoadingSpinner fullPage label="Loading reports..." />;
+  }
+
+  const totalJobsCompleted = metrics?.reduce((sum, m) => sum + m.jobsCompleted, 0) ?? 0;
+  const avgEfficiency = metrics
+    ? Math.round(metrics.reduce((sum, m) => sum + m.crewUtilization, 0) / metrics.length)
+    : 0;
+  const activeCustomerCount = (customers ?? []).filter((c) => c.status === 'active').length;
 
   return (
     <div className="space-y-6">
