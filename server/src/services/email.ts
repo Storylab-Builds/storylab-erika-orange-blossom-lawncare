@@ -5,6 +5,7 @@
 
 import { Resend } from 'resend';
 import { prisma } from '../db';
+import { env } from '../env';
 import { getIntegrationsConfig } from './integrations';
 
 export interface SendEmailInput {
@@ -47,8 +48,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     return { success: false, status: 'failed', provider: 'dev-log', messageLogId: log.id, error: 'Invalid email address' };
   }
 
-  // No API key → dev-log transport (records so it is visible in the app + history).
-  if (!cfg.enabled || !cfg.apiKey) {
+  // No API key, or test mode → dev-log transport (never send real email in tests).
+  if (env.nodeEnv === 'test' || !cfg.enabled || !cfg.apiKey) {
     const log = await prisma.messageLog.create({
       data: {
         channel: 'email', toAddress: to, fromAddress: cfg.from, subject: input.subject,

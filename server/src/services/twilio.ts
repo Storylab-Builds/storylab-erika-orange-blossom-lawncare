@@ -6,6 +6,7 @@
 
 import twilio from 'twilio';
 import { prisma } from '../db';
+import { env } from '../env';
 import { getIntegrationsConfig } from './integrations';
 
 export interface SendSmsInput {
@@ -64,8 +65,8 @@ export async function sendSms(input: SendSmsInput): Promise<SendSmsResult> {
     return { success: false, status: 'failed', provider: 'dev-log', messageLogId: log.id, error: 'Invalid phone number format' };
   }
 
-  // No credentials → dev-log transport (still records the message).
-  if (!cfg.enabled || !cfg.accountSid || !cfg.authToken || !cfg.fromNumber) {
+  // No credentials, or test mode → dev-log transport (never send real SMS in tests).
+  if (env.nodeEnv === 'test' || !cfg.enabled || !cfg.accountSid || !cfg.authToken || !cfg.fromNumber) {
     const log = await prisma.messageLog.create({
       data: {
         channel: 'sms', toAddress: to, fromAddress: cfg.fromNumber || 'dev-log',
