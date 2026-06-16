@@ -229,6 +229,40 @@ export default function Landing() {
   const [selectedEstimatorServices, setSelectedEstimatorServices] = useState<string[]>(['mowing']);
   const [activeSeason, setActiveSeason] = useState(2); // Jun-Aug default for mid-June
 
+  // The app uses HashRouter, so a plain <a href="#services"> gets hijacked by the
+  // router (-> /#/services -> 404). Intercept same-page hash-anchor clicks and
+  // smooth-scroll to the matching section instead, so the marketing nav + CTAs work.
+  useEffect(() => {
+    function handleAnchorClick(e: MouseEvent) {
+      const el = e.target as HTMLElement | null;
+      const anchor = el && typeof el.closest === 'function' ? el.closest('a[href^="#"]') : null;
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || !href.startsWith('#')) return;
+      e.preventDefault();
+      const id = href.slice(1);
+      if (!id) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      const target = document.getElementById(id);
+      if (target) {
+        // Offset for the sticky header; re-align a couple of times because the page's
+        // reveal-on-scroll animations change section heights mid-scroll, which would
+        // otherwise leave us landing short of the target section.
+        const go = () => {
+          const top = target.getBoundingClientRect().top + window.scrollY - 72;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        };
+        go();
+        window.setTimeout(go, 350);
+        window.setTimeout(go, 800);
+      }
+    }
+    document.addEventListener('click', handleAnchorClick);
+    return () => document.removeEventListener('click', handleAnchorClick);
+  }, []);
+
   // Computed live data from mockData
   const liveData = useMemo(() => {
     const activeCustomerCount = customers.filter(c => c.status === 'active').length;
