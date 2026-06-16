@@ -99,7 +99,7 @@ export default function Customers() {
     return (
       <div className="text-center py-12">
         <p className="text-lg font-medium text-error">Failed to load customers</p>
-        <p className="text-sm text-slate-500 mt-1">{(error as Error)?.message ?? 'Unknown error'}</p>
+        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">{(error as Error)?.message ?? 'Unknown error'}</p>
       </div>
     );
   }
@@ -111,7 +111,7 @@ export default function Customers() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-slate-500">{filtered.length} total customers</p>
+          <p className="text-sm text-slate-500 dark:text-gray-400">{filtered.length} total customers</p>
         </div>
         <Button icon={<Plus className="w-4 h-4" />} onClick={openAddModal}>
           Add Customer
@@ -121,23 +121,23 @@ export default function Customers() {
       {/* Search & Filter */}
       <div className="flex items-center gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search customers by name, address, or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search customers"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
         <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label="Filter by status"
-            className="pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 text-sm appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 text-sm appearance-none bg-white dark:bg-gray-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -172,14 +172,14 @@ export default function Customers() {
                 to={`/customers/${customer.id}`}
                 className="block"
               >
-                <Card hover>
+                <Card hover className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-slate-900">
+                      <h3 className="font-semibold text-slate-900 dark:text-white">
                         {customer.name}
                       </h3>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
-                        <MapPin className="w-3 h-3" />
+                      <div className="flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-gray-400">
+                        <MapPin className="w-3 h-3" aria-hidden="true" />
                         {customer.address}, {customer.city}, {customer.state}
                       </div>
                     </div>
@@ -188,21 +188,21 @@ export default function Customers() {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
-                    <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {customer.phone}</span>
-                    <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {customer.email}</span>
+                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-gray-400 mb-3">
+                    <span className="flex items-center gap-1"><Phone className="w-3 h-3" aria-hidden="true" /> {customer.phone}</span>
+                    <span className="flex items-center gap-1"><Mail className="w-3 h-3" aria-hidden="true" /> {customer.email}</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-gray-700">
                     <div className="flex items-center gap-4 text-xs">
-                      <span className="text-slate-500">
-                        <span className="font-semibold text-slate-700">{totalServices}</span> active services
+                      <span className="text-slate-500 dark:text-gray-400">
+                        <span className="font-semibold text-slate-700 dark:text-gray-300">{totalServices}</span> active services
                       </span>
-                      <span className="text-slate-500">
-                        <span className="font-semibold text-slate-700">{lotDisplay}</span>
+                      <span className="text-slate-500 dark:text-gray-400">
+                        <span className="font-semibold text-slate-700 dark:text-gray-300">{lotDisplay}</span>
                       </span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-gray-600" aria-hidden="true" />
                   </div>
                 </Card>
               </Link>

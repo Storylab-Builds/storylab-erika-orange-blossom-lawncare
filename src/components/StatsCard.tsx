@@ -25,11 +25,11 @@ export default function StatsCard({
     <Card className={className}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-500 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-slate-900">{value}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
         </div>
         {icon && (
-          <div className="w-10 h-10 rounded-xl bg-accent-light text-primary flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-accent-light text-primary dark:bg-primary/20 dark:text-primary-light flex items-center justify-center">
             {icon}
           </div>
         )}
@@ -46,7 +46,7 @@ export default function StatsCard({
           >
             {trend}%
           </span>
-          <span className="text-sm text-gray-400">vs last week</span>
+          <span className="text-sm text-gray-400 dark:text-gray-500">vs last week</span>
         </div>
       )}
     </Card>

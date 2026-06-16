@@ -305,9 +305,9 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/60">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-slate-200/60 dark:border-gray-700/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2.5">
@@ -315,23 +315,23 @@ export default function Landing() {
                 <Leaf className="w-5 h-5 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-base text-slate-900 tracking-tight leading-tight">
+                <span className="font-bold text-base text-slate-900 dark:text-white tracking-tight leading-tight">
                   Orange Blossom
                 </span>
-                <span className="text-[10px] font-semibold text-green-600 uppercase tracking-widest leading-tight">
+                <span className="text-[10px] font-semibold text-green-600 dark:text-green-400 uppercase tracking-widest leading-tight">
                   Special Lawncare
                 </span>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#services" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Services</a>
-              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
-              <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
-              <a href="#reviews" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Reviews</a>
-              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
+              <a href="#services" className="text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">Services</a>
+              <a href="#how-it-works" className="text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">How It Works</a>
+              <a href="#pricing" className="text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a>
+              <a href="#reviews" className="text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">Reviews</a>
+              <a href="#faq" className="text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">FAQ</a>
             </div>
             <div className="flex items-center gap-3">
-              <a href="tel:+13305551234" className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-primary transition-colors">
+              <a href="tel:+13305551234" className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
                 (330) 555-1234
               </a>
@@ -342,7 +342,7 @@ export default function Landing() {
                 Customer Portal
               </Link>
               <button
-                className="md:hidden p-2 text-slate-600 hover:text-slate-900"
+                className="md:hidden p-2 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -354,14 +354,14 @@ export default function Landing() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 py-4 px-4 space-y-3">
-            <a href="#services" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 py-2">Services</a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 py-2">How It Works</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 py-2">Pricing</a>
-            <a href="#reviews" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 py-2">Reviews</a>
-            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 py-2">FAQ</a>
-            <div className="pt-2 border-t border-slate-200 flex flex-col gap-3">
-              <a href="tel:+13305551234" className="flex items-center gap-2 text-sm font-medium text-slate-700 py-2">
+          <div className="md:hidden bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-700 py-4 px-4 space-y-3">
+            <a href="#services" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 dark:text-gray-300 py-2">Services</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 dark:text-gray-300 py-2">How It Works</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 dark:text-gray-300 py-2">Pricing</a>
+            <a href="#reviews" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 dark:text-gray-300 py-2">Reviews</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-medium text-slate-700 dark:text-gray-300 py-2">FAQ</a>
+            <div className="pt-2 border-t border-slate-200 dark:border-gray-700 flex flex-col gap-3">
+              <a href="tel:+13305551234" className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-gray-300 py-2">
                 <Phone className="w-4 h-4" /> (330) 555-1234
               </a>
               <Link
@@ -379,7 +379,7 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-32 overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-white to-blue-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800" />
         <div className="absolute top-20 right-[-100px] w-[500px] h-[500px] bg-green-200/20 rounded-full blur-3xl" />
         <div className="absolute bottom-[-50px] left-[-50px] w-[400px] h-[400px] bg-blue-200/15 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-green-100/30 to-transparent rounded-full blur-2xl" />
@@ -398,17 +398,17 @@ export default function Landing() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100/80 rounded-full text-green-700 text-sm font-medium mb-6 border border-green-200/60">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100/80 dark:bg-green-500/15 rounded-full text-green-700 dark:text-green-300 text-sm font-medium mb-6 border border-green-200/60 dark:border-green-500/30">
                 <Leaf className="w-4 h-4" />
                 Serving Northeastern Ohio Since 2018
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.08]">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.08]">
                 Your Lawn,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-green-500 to-primary">
                   Perfected.
                 </span>
               </h1>
-              <p className="mt-6 text-lg sm:text-xl text-slate-600 leading-relaxed max-w-xl">
+              <p className="mt-6 text-lg sm:text-xl text-slate-600 dark:text-gray-400 leading-relaxed max-w-xl">
                 Professional lawn care powered by intelligent scheduling, weather-smart
                 automation, and a crew that treats your property like their own.
               </p>
@@ -422,12 +422,12 @@ export default function Landing() {
                 </a>
                 <a
                   href="#services"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-slate-700 text-base font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-300 text-base font-semibold rounded-xl border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700 hover:border-slate-300 dark:hover:border-gray-600 transition-all"
                 >
                   View Services
                 </a>
               </div>
-              <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
+              <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-gray-400">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
                   Licensed & Insured
@@ -466,21 +466,21 @@ export default function Landing() {
               </div>
 
               {/* Floating stat cards */}
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg shadow-slate-900/8 p-4 flex items-center gap-3 border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg shadow-slate-900/8 p-4 flex items-center gap-3 border border-slate-100 dark:border-gray-700">
+                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">98% Retention</p>
-                  <p className="text-xs text-slate-500">Customers who stay year after year</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">98% Retention</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">Customers who stay year after year</p>
                 </div>
               </div>
-              <div className="absolute -top-3 -right-3 bg-white rounded-xl shadow-lg shadow-slate-900/8 p-3 flex items-center gap-2.5 border border-slate-100">
+              <div className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg shadow-slate-900/8 p-3 flex items-center gap-2.5 border border-slate-100 dark:border-gray-700">
                 <div className="flex gap-0.5">
                   {[1,2,3,4,5].map(i => <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
                 </div>
-                <span className="text-sm font-bold text-slate-900">4.9</span>
-                <span className="text-xs text-slate-500">500+ reviews</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">4.9</span>
+                <span className="text-xs text-slate-500 dark:text-gray-400">500+ reviews</span>
               </div>
             </div>
           </div>
@@ -516,12 +516,12 @@ export default function Landing() {
       </section>
 
       {/* Live Operations Dashboard Preview */}
-      <section className="py-20 sm:py-28 bg-white">
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Smart Operations</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">See How We Run — In Real Time</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">See How We Run — In Real Time</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Our intelligent platform manages every crew, every job, every forecast — so your lawn gets the attention it deserves.
             </p>
           </div>
@@ -581,53 +581,53 @@ export default function Landing() {
             </div>
 
             {/* Weather & Forecast Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-100">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-800 rounded-2xl p-6 border border-blue-100 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-5">
-                <CloudSun className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold text-sm text-slate-900">Weather-Smart Scheduling</h3>
+                <CloudSun className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Weather-Smart Scheduling</h3>
               </div>
               {/* Current Weather */}
-              <div className="flex items-center gap-4 mb-5 bg-white/60 rounded-xl p-4 border border-blue-100/60">
+              <div className="flex items-center gap-4 mb-5 bg-white/60 dark:bg-gray-900/60 rounded-xl p-4 border border-blue-100/60 dark:border-gray-700">
                 <div className="text-center">
                   <Thermometer className="w-6 h-6 text-orange-500 mx-auto" />
-                  <p className="text-3xl font-bold text-slate-900 mt-1">{liveData.weatherCurrent.temp}°</p>
-                  <p className="text-xs text-slate-500">Feels {liveData.weatherCurrent.feelsLike}°</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{liveData.weatherCurrent.temp}°</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">Feels {liveData.weatherCurrent.feelsLike}°</p>
                 </div>
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-1.5">
                     <Droplets className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="text-xs text-slate-600">{liveData.weatherCurrent.humidity}% humidity</span>
+                    <span className="text-xs text-slate-600 dark:text-gray-400">{liveData.weatherCurrent.humidity}% humidity</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Wind className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-xs text-slate-600">{liveData.weatherCurrent.windSpeed} mph</span>
+                    <Wind className="w-3.5 h-3.5 text-slate-500 dark:text-gray-400" />
+                    <span className="text-xs text-slate-600 dark:text-gray-400">{liveData.weatherCurrent.windSpeed} mph</span>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs font-medium text-slate-700 capitalize">{liveData.weatherCurrent.condition}</p>
-                    <p className="text-xs text-slate-500">Akron, OH</p>
+                    <p className="text-xs font-medium text-slate-700 dark:text-gray-300 capitalize">{liveData.weatherCurrent.condition}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Akron, OH</p>
                   </div>
                 </div>
               </div>
 
               {/* 5-Day Forecast */}
               <div className="space-y-2">
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">5-Day Impact Forecast</p>
+                <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium">5-Day Impact Forecast</p>
                 {liveData.weatherForecast.map((day, i) => (
                   <div key={day.date} className="flex items-center gap-3 text-sm">
-                    <span className="w-8 text-xs font-medium text-slate-500">
+                    <span className="w-8 text-xs font-medium text-slate-500 dark:text-gray-400">
                       {i === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                     </span>
                     <div className="flex-1 flex items-center gap-2">
                       {day.precipChance > 50 ? (
                         <CloudRain className="w-4 h-4 text-blue-500" />
                       ) : day.precipChance > 25 ? (
-                        <CloudSun className="w-4 h-4 text-slate-400" />
+                        <CloudSun className="w-4 h-4 text-slate-400 dark:text-gray-500" />
                       ) : (
                         <Sun className="w-4 h-4 text-amber-400" />
                       )}
-                      <span className="text-xs text-slate-700">{day.condition}</span>
+                      <span className="text-xs text-slate-700 dark:text-gray-300">{day.condition}</span>
                     </div>
-                    <span className="text-xs text-slate-600">{day.high}°/{day.low}°</span>
+                    <span className="text-xs text-slate-600 dark:text-gray-400">{day.high}°/{day.low}°</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                       day.impact === 'none' ? 'bg-green-100 text-green-700' :
                       day.impact === 'low' ? 'bg-amber-100 text-amber-700' :
@@ -661,14 +661,14 @@ export default function Landing() {
             </div>
 
             {/* Weekly Performance Card */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-slate-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-5">
-                <TrendingUp className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-semibold text-sm text-slate-900">This Week's Performance</h3>
+                <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">This Week's Performance</h3>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 border border-emerald-100 dark:border-emerald-500/20">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-emerald-700">Weekly Revenue</p>
                     <span className="text-xs font-medium text-emerald-600 flex items-center gap-0.5">
@@ -680,31 +680,31 @@ export default function Landing() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-xs text-slate-500">Avg Satisfaction</p>
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-3 border border-slate-100 dark:border-gray-600">
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Avg Satisfaction</p>
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span className="text-lg font-bold text-slate-900">{liveData.avgSatisfaction}</span>
+                      <span className="text-lg font-bold text-slate-900 dark:text-white">{liveData.avgSatisfaction}</span>
                     </div>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-xs text-slate-500">Crew Utilization</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.avgUtilization}%</p>
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-3 border border-slate-100 dark:border-gray-600">
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Crew Utilization</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{liveData.avgUtilization}%</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-xs text-slate-500">Staff On Duty</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.clockedInCount}/{liveData.totalEmployees}</p>
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-3 border border-slate-100 dark:border-gray-600">
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Staff On Duty</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{liveData.clockedInCount}/{liveData.totalEmployees}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <p className="text-xs text-slate-500">Equipment Active</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{liveData.equipmentInUse}/{liveData.totalEquipment}</p>
+                  <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-3 border border-slate-100 dark:border-gray-600">
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Equipment Active</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{liveData.equipmentInUse}/{liveData.totalEquipment}</p>
                   </div>
                 </div>
 
                 {/* Mini Revenue Chart */}
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">7-Day Revenue</p>
-                  <div className="flex items-end gap-1 h-16">
+                  <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-2">7-Day Revenue</p>
+                  <div className="flex items-end gap-1 h-16" role="img" aria-label="Bar chart of revenue for the last 7 days">
                     {dailyMetrics.slice(-7).map((day, i) => {
                       const max = Math.max(...dailyMetrics.slice(-7).map(d => d.revenue));
                       const height = (day.revenue / max) * 100;
@@ -718,7 +718,7 @@ export default function Landing() {
                               ${day.revenue.toLocaleString()}
                             </div>
                           </div>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 dark:text-gray-500">
                             {new Date(day.date).toLocaleDateString('en-US', { weekday: 'narrow' })}
                           </span>
                         </div>
@@ -729,7 +729,7 @@ export default function Landing() {
 
                 {/* Recent Activity */}
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Live Activity</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-2">Live Activity</p>
                   <div className="space-y-1.5 max-h-32 overflow-hidden">
                     {liveData.recentActivities.slice(0, 4).map(act => (
                       <div key={act.id} className="flex items-start gap-2 text-xs">
@@ -737,9 +737,9 @@ export default function Landing() {
                           act.type === 'job-completed' ? 'bg-emerald-400' :
                           act.type === 'payment-received' ? 'bg-blue-400' :
                           act.type === 'weather-alert' ? 'bg-amber-400' :
-                          'bg-slate-300'
+                          'bg-slate-300 dark:bg-gray-600'
                         }`} />
-                        <p className="text-slate-600 leading-relaxed line-clamp-1">{act.description}</p>
+                        <p className="text-slate-600 dark:text-gray-400 leading-relaxed line-clamp-1">{act.description}</p>
                       </div>
                     ))}
                   </div>
@@ -761,12 +761,12 @@ export default function Landing() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 sm:py-28 bg-white">
+      <section id="services" className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">What We Offer</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Complete Lawn & Landscape Services</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Complete Lawn & Landscape Services</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               From weekly mowing to full landscape transformations — we handle it all so you can enjoy your yard.
             </p>
           </div>
@@ -774,15 +774,15 @@ export default function Landing() {
             {services.map((service) => (
               <div
                 key={service.name}
-                className="group p-6 rounded-2xl border border-slate-200 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 bg-white"
+                className="group p-6 rounded-2xl border border-slate-200 dark:border-gray-700 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 bg-white dark:bg-gray-800"
               >
                 <div className={`w-12 h-12 rounded-xl ${service.color} flex items-center justify-center mb-4 shadow-sm`}>
                   <service.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 group-hover:text-primary transition-colors">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                   {service.name}
                 </h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{service.desc}</p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-gray-400 leading-relaxed">{service.desc}</p>
               </div>
             ))}
           </div>
@@ -790,12 +790,12 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 sm:py-28 bg-slate-50">
+      <section id="how-it-works" className="py-20 sm:py-28 bg-slate-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Simple Process</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">How It Works</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">How It Works</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Getting started is simple. Professional lawn care in four easy steps.
             </p>
           </div>
@@ -806,14 +806,14 @@ export default function Landing() {
                 {i < features.length - 1 && (
                   <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-primary/20 to-primary/5" />
                 )}
-                <div className="relative mx-auto w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm mb-5 group-hover:shadow-md group-hover:border-primary/30 transition-all">
+                <div className="relative mx-auto w-16 h-16 rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 flex items-center justify-center shadow-sm mb-5 group-hover:shadow-md group-hover:border-primary/30 transition-all">
                   <feature.icon className="w-7 h-7 text-primary" />
                   <span className="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center shadow-sm">
                     {feature.step}
                   </span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">{feature.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed max-w-[240px] mx-auto">{feature.desc}</p>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">{feature.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-gray-400 leading-relaxed max-w-[240px] mx-auto">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -821,15 +821,15 @@ export default function Landing() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20 sm:py-28 bg-white">
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Why Us</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">
                 Why Homeowners Choose Orange Blossom Special
               </h2>
-              <p className="mt-4 text-lg text-slate-600">
+              <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
                 We combine old-fashioned work ethic with modern technology to deliver a lawn care experience that's second to none.
               </p>
               <div className="mt-8 space-y-5">
@@ -840,12 +840,12 @@ export default function Landing() {
                   { icon: Shield, title: 'Fully Licensed & Insured', desc: 'Complete commercial liability coverage and all required Ohio licenses. Background-checked crews you can trust.' },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-4 group">
-                    <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-accent-light flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-accent-light dark:bg-primary/20 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                       <item.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                      <p className="mt-1 text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{item.title}</h3>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-gray-400 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -881,30 +881,30 @@ export default function Landing() {
       </section>
 
       {/* Meet Our Crews */}
-      <section className="py-20 sm:py-28 bg-slate-50">
+      <section className="py-20 sm:py-28 bg-slate-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Our Team</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Meet Your Dedicated Crews</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Meet Your Dedicated Crews</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Every property gets a consistent crew that knows your lawn. {employees.filter(e => e.clockedIn).length} team members serving {customers.filter(c => c.status === 'active').length} active customers today.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {crews.map(crew => (
-              <div key={crew.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group">
+              <div key={crew.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all group">
                 <div className="bg-gradient-to-r from-primary/10 to-green-500/10 p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold text-slate-900">{crew.name}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{crew.name}</h3>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                       crew.status === 'on-job' ? 'bg-emerald-100 text-emerald-700' :
                       crew.status === 'available' ? 'bg-blue-100 text-blue-700' :
-                      'bg-slate-100 text-slate-600'
+                      'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300'
                     }`}>
                       {crew.status === 'on-job' ? 'On Job' : crew.status === 'available' ? 'Available' : 'Off Duty'}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                  <p className="text-sm text-slate-600 dark:text-gray-400 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-primary" />
                     {crew.serviceZone}
                   </p>
@@ -912,7 +912,7 @@ export default function Landing() {
                 <div className="p-5">
                   {/* Members */}
                   <div className="mb-4">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Team Members</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-2">Team Members</p>
                     <div className="space-y-2">
                       {crew.members.map(member => (
                         <div key={member.id} className="flex items-center gap-2.5">
@@ -922,8 +922,8 @@ export default function Landing() {
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{member.name}</p>
-                            <p className="text-xs text-slate-500 capitalize">{member.role.replace('-', ' ')}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{member.name}</p>
+                            <p className="text-xs text-slate-500 dark:text-gray-400 capitalize">{member.role.replace('-', ' ')}</p>
                           </div>
                           {member.clockedIn && (
                             <div className="w-2 h-2 rounded-full bg-emerald-400" title="Clocked In" />
@@ -935,15 +935,15 @@ export default function Landing() {
 
                   {/* Specialties */}
                   <div className="mb-4">
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Specialties</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-medium mb-2">Specialties</p>
                     <div className="flex flex-wrap gap-1.5">
                       {crew.specialties.slice(0, 4).map(spec => (
-                        <span key={spec} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full capitalize">
+                        <span key={spec} className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 rounded-full capitalize">
                           {spec.replace('-', ' ')}
                         </span>
                       ))}
                       {crew.specialties.length > 4 && (
-                        <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">
+                        <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 rounded-full">
                           +{crew.specialties.length - 4} more
                         </span>
                       )}
@@ -951,20 +951,20 @@ export default function Landing() {
                   </div>
 
                   {/* Today's Progress */}
-                  <div className="pt-3 border-t border-slate-100">
+                  <div className="pt-3 border-t border-slate-100 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs text-slate-500">Today's Progress</p>
-                      <p className="text-xs font-medium text-slate-700">{crew.todayJobsCompleted}/{crew.todayJobsCount} jobs</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">Today's Progress</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-gray-300">{crew.todayJobsCompleted}/{crew.todayJobsCount} jobs</p>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-slate-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full transition-all"
                         style={{ width: `${(crew.todayJobsCompleted / crew.todayJobsCount) * 100}%` }}
                       />
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-slate-500">{crew.efficiency}% efficiency</span>
-                      <span className="text-xs text-slate-500">{crew.equipment.length} equipment</span>
+                      <span className="text-xs text-slate-500 dark:text-gray-400">{crew.efficiency}% efficiency</span>
+                      <span className="text-xs text-slate-500 dark:text-gray-400">{crew.equipment.length} equipment</span>
                     </div>
                   </div>
                 </div>
@@ -975,12 +975,12 @@ export default function Landing() {
       </section>
 
       {/* Seasonal Calendar */}
-      <section className="py-20 sm:py-28 bg-white">
+      <section className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Year-Round Care</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Your Lawn, Every Season</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Your Lawn, Every Season</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Northeast Ohio's climate demands a year-round approach. Here's how we care for your property through every season.
             </p>
           </div>
@@ -994,7 +994,7 @@ export default function Landing() {
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   activeSeason === i
                     ? `${season.bgColor} ${season.color} border ${season.borderColor} shadow-sm`
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                    : 'bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600'
                 }`}
               >
                 <season.icon className="w-4 h-4" />
@@ -1028,31 +1028,31 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section id="reviews" className="py-20 sm:py-28 bg-slate-50">
+      <section id="reviews" className="py-20 sm:py-28 bg-slate-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Testimonials</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">What Our Customers Say</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">What Our Customers Say</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Don't just take our word for it — hear from homeowners who trust us with their properties.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {testimonials.map((t) => (
-              <div key={t.name} className="p-5 bg-white rounded-2xl border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
+              <div key={t.name} className="p-5 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 hover:shadow-lg hover:border-slate-300 dark:hover:border-gray-600 transition-all duration-300">
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 text-sm leading-relaxed">"{t.text}"</p>
-                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+                <p className="text-slate-700 dark:text-gray-300 text-sm leading-relaxed">"{t.text}"</p>
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-gray-700 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-xs font-bold text-primary">{t.avatar}</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-sm text-slate-900">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.location}</p>
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white">{t.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">{t.location}</p>
                   </div>
                 </div>
               </div>
@@ -1062,12 +1062,12 @@ export default function Landing() {
       </section>
 
       {/* Recent Projects */}
-      <section id="projects" className="py-20 sm:py-28 bg-white">
+      <section id="projects" className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Our Work</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Recent Projects</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Recent Projects</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Real transformations for real Northeastern Ohio properties. See the difference professional care makes.
             </p>
           </div>
@@ -1082,20 +1082,20 @@ export default function Landing() {
                   className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
                     activeProject === i
                       ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                      : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className={`font-semibold text-sm ${activeProject === i ? 'text-primary' : 'text-slate-900'}`}>
+                      <h4 className={`font-semibold text-sm ${activeProject === i ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>
                         {project.title}
                       </h4>
-                      <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {project.location}
                       </p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      activeProject === i ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-600'
+                      activeProject === i ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300'
                     }`}>
                       {project.type}
                     </span>
@@ -1106,46 +1106,46 @@ export default function Landing() {
 
             {/* Project detail */}
             <div className="lg:col-span-3">
-              <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-                <div className="bg-gradient-to-br from-green-50 to-blue-50 p-8">
+              <div className="rounded-2xl border border-slate-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
+                <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 p-8">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center">
                       <Camera className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">{recentProjects[activeProject].title}</h3>
-                      <p className="text-sm text-slate-500">{recentProjects[activeProject].location}</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white">{recentProjects[activeProject].title}</h3>
+                      <p className="text-sm text-slate-500 dark:text-gray-400">{recentProjects[activeProject].location}</p>
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                    <div className="bg-white/80 rounded-xl p-4 border border-red-200/40">
-                      <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">Before</p>
-                      <p className="text-sm text-slate-700 leading-relaxed">{recentProjects[activeProject].before}</p>
+                    <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl p-4 border border-red-200/40 dark:border-red-500/30">
+                      <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2">Before</p>
+                      <p className="text-sm text-slate-700 dark:text-gray-300 leading-relaxed">{recentProjects[activeProject].before}</p>
                     </div>
-                    <div className="bg-white/80 rounded-xl p-4 border border-green-200/40">
-                      <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">After</p>
-                      <p className="text-sm text-slate-700 leading-relaxed">{recentProjects[activeProject].after}</p>
+                    <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl p-4 border border-green-200/40 dark:border-green-500/30">
+                      <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider mb-2">After</p>
+                      <p className="text-sm text-slate-700 dark:text-gray-300 leading-relaxed">{recentProjects[activeProject].after}</p>
                     </div>
                   </div>
                 </div>
-                <div className="p-5 flex items-center justify-between border-t border-slate-100">
+                <div className="p-5 flex items-center justify-between border-t border-slate-100 dark:border-gray-700">
                   <div className="flex gap-6">
                     <div>
-                      <p className="text-xs text-slate-500">Duration</p>
-                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].duration}</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">Duration</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{recentProjects[activeProject].duration}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Area</p>
-                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].sqft} sq ft</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">Area</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{recentProjects[activeProject].sqft} sq ft</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">Type</p>
-                      <p className="text-sm font-semibold text-slate-900">{recentProjects[activeProject].type}</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400">Type</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{recentProjects[activeProject].type}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <ThumbsUp className="w-4 h-4 text-green-500" />
-                    <span className="text-xs font-medium text-green-600">Customer Approved</span>
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">Customer Approved</span>
                   </div>
                 </div>
               </div>
@@ -1155,25 +1155,25 @@ export default function Landing() {
       </section>
 
       {/* Service Area */}
-      <section className="py-20 sm:py-28 bg-slate-50">
+      <section className="py-20 sm:py-28 bg-slate-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Coverage</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Serving Northeastern Ohio</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Serving Northeastern Ohio</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               From Akron to Canton and everywhere in between — we cover a 30-mile radius with same-day or next-day service.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {serviceAreas.map((area) => (
-              <div key={area.city} className="p-4 bg-white rounded-xl border border-slate-200 hover:border-primary/30 hover:shadow-md transition-all group">
+              <div key={area.city} className="p-4 bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-700 hover:border-primary/30 hover:shadow-md transition-all group">
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                  <h4 className="font-semibold text-slate-900 text-sm">{area.city}</h4>
+                  <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{area.city}</h4>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">ZIP: {area.zip}</p>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mb-2">ZIP: {area.zip}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-600">{area.customers} customers</span>
+                  <span className="text-xs text-slate-600 dark:text-gray-400">{area.customers} customers</span>
                   <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
                     area.responseTime === 'Same day' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
                   }`}>
@@ -1184,21 +1184,21 @@ export default function Landing() {
             ))}
           </div>
           <div className="mt-8 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-gray-400">
               <Truck className="w-4 h-4 inline mr-1" />
-              Total service area: <strong className="text-slate-700">536+ active customers</strong> across <strong className="text-slate-700">10 communities</strong>
+              Total service area: <strong className="text-slate-700 dark:text-gray-200">536+ active customers</strong> across <strong className="text-slate-700 dark:text-gray-200">10 communities</strong>
             </p>
           </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 sm:py-28 bg-white">
+      <section id="pricing" className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Plans</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Simple, Honest Pricing</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Simple, Honest Pricing</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Choose a plan that fits your property. All plans include our satisfaction guarantee.
             </p>
           </div>
@@ -1208,8 +1208,8 @@ export default function Landing() {
                 key={plan.name}
                 className={`relative p-6 rounded-2xl border-2 transition-all duration-300 hover:shadow-lg ${
                   plan.popular
-                    ? 'border-primary shadow-lg shadow-primary/10 bg-white scale-[1.02]'
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-primary shadow-lg shadow-primary/10 bg-white dark:bg-gray-800 scale-[1.02]'
+                    : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                 }`}
               >
                 {plan.popular && (
@@ -1217,15 +1217,15 @@ export default function Landing() {
                     Most Popular
                   </span>
                 )}
-                <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
-                <p className="mt-1 text-sm text-slate-500">{plan.desc}</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{plan.name}</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">{plan.desc}</p>
                 <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-slate-900">${plan.price}</span>
-                  <span className="text-slate-500 text-sm">{plan.period}</span>
+                  <span className="text-4xl font-extrabold text-slate-900 dark:text-white">${plan.price}</span>
+                  <span className="text-slate-500 dark:text-gray-400 text-sm">{plan.period}</span>
                 </div>
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
+                    <li key={f} className="flex items-start gap-2 text-sm text-slate-700 dark:text-gray-300">
                       <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
@@ -1236,7 +1236,7 @@ export default function Landing() {
                   className={`mt-6 block text-center py-3 rounded-xl text-sm font-semibold transition-all ${
                     plan.popular
                       ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-md'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-gray-200 hover:bg-slate-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {plan.cta}
@@ -1244,19 +1244,19 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center text-sm text-slate-500">
+          <p className="mt-8 text-center text-sm text-slate-500 dark:text-gray-400">
             All prices based on standard residential lots (up to 1/4 acre). Custom quotes available for larger properties.
           </p>
         </div>
       </section>
 
       {/* Cost Estimator */}
-      <section id="estimator" className="py-20 sm:py-28 bg-slate-50">
+      <section id="estimator" className="py-20 sm:py-28 bg-slate-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Estimate</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Build Your Custom Quote</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Build Your Custom Quote</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Select your lot size and services to get an instant monthly estimate. No commitment required.
             </p>
           </div>
@@ -1265,8 +1265,8 @@ export default function Landing() {
             {/* Service & Lot Selector */}
             <div className="lg:col-span-3 space-y-6">
               {/* Lot Size */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-6">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                   <Calculator className="w-5 h-5 text-primary" />
                   1. Select Your Lot Size
                 </h3>
@@ -1278,21 +1278,21 @@ export default function Landing() {
                       className={`p-4 rounded-xl border text-left transition-all ${
                         selectedLotSize === lot.value
                           ? 'border-primary bg-primary/5 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                          : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                     >
-                      <p className={`text-sm font-semibold ${selectedLotSize === lot.value ? 'text-primary' : 'text-slate-900'}`}>
+                      <p className={`text-sm font-semibold ${selectedLotSize === lot.value ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>
                         {lot.label}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5">{lot.multiplier}x base price</p>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{lot.multiplier}x base price</p>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Services */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-6">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                   <Wrench className="w-5 h-5 text-primary" />
                   2. Choose Your Services
                 </h3>
@@ -1308,20 +1308,20 @@ export default function Landing() {
                         className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
                           isSelected
                             ? 'border-primary bg-primary/5'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                            : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                            isSelected ? 'border-primary bg-primary' : 'border-slate-300'
+                            isSelected ? 'border-primary bg-primary' : 'border-slate-300 dark:border-gray-600'
                           }`}>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                           </div>
-                          <span className={`text-sm font-medium ${isSelected ? 'text-primary' : 'text-slate-700'}`}>
+                          <span className={`text-sm font-medium ${isSelected ? 'text-primary' : 'text-slate-700 dark:text-gray-300'}`}>
                             {svc.name}
                           </span>
                         </div>
-                        <span className="text-sm text-slate-500">${adjustedPrice}/visit</span>
+                        <span className="text-sm text-slate-500 dark:text-gray-400">${adjustedPrice}/visit</span>
                       </button>
                     );
                   })}
@@ -1331,8 +1331,8 @@ export default function Landing() {
 
             {/* Estimate Summary */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-24">
-                <h3 className="font-semibold text-slate-900 mb-4">Your Estimate</h3>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-6 sticky top-24">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Your Estimate</h3>
                 <div className="space-y-3 mb-6">
                   {selectedEstimatorServices.map(svcId => {
                     const svc = estimatorServices.find(s => s.id === svcId);
@@ -1345,23 +1345,23 @@ export default function Landing() {
                       : adjustedPrice;
                     return (
                       <div key={svcId} className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">{svc.name}</span>
-                        <span className="font-medium text-slate-900">${Math.round(monthlyTotal)}</span>
+                        <span className="text-slate-600 dark:text-gray-400">{svc.name}</span>
+                        <span className="font-medium text-slate-900 dark:text-white">${Math.round(monthlyTotal)}</span>
                       </div>
                     );
                   })}
                   {selectedEstimatorServices.length === 0 && (
-                    <p className="text-sm text-slate-400 text-center py-4">Select services to see estimate</p>
+                    <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-4">Select services to see estimate</p>
                   )}
                 </div>
                 {selectedEstimatorServices.length > 0 && (
                   <>
-                    <div className="border-t border-slate-200 pt-4 mb-6">
+                    <div className="border-t border-slate-200 dark:border-gray-700 pt-4 mb-6">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900">Est. Monthly Total</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">Est. Monthly Total</span>
                         <span className="text-2xl font-extrabold text-primary">${estimatedCost}</span>
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                         Based on {lotSizeOptions.find(l => l.value === selectedLotSize)?.label} lot
                       </p>
                     </div>
@@ -1371,7 +1371,7 @@ export default function Landing() {
                     >
                       Get Exact Quote
                     </a>
-                    <p className="text-xs text-slate-500 text-center mt-2">Final pricing may vary based on property assessment</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 text-center mt-2">Final pricing may vary based on property assessment</p>
                   </>
                 )}
               </div>
@@ -1381,12 +1381,12 @@ export default function Landing() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 sm:py-28 bg-white">
+      <section id="faq" className="py-20 sm:py-28 bg-white dark:bg-gray-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">FAQ</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Frequently Asked Questions</h2>
-            <p className="mt-4 text-lg text-slate-600">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+            <p className="mt-4 text-lg text-slate-600 dark:text-gray-400">
               Everything you need to know about our lawn care services.
             </p>
           </div>
@@ -1394,22 +1394,23 @@ export default function Landing() {
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden transition-all"
+                className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 overflow-hidden transition-all"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
                   className="w-full flex items-center justify-between px-6 py-4 text-left"
                 >
-                  <span className="font-semibold text-slate-900 text-sm sm:text-base pr-4">{faq.q}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base pr-4">{faq.q}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+                    className={`w-5 h-5 text-slate-400 dark:text-gray-500 flex-shrink-0 transition-transform duration-200 ${
                       openFaq === i ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 {openFaq === i && (
                   <div className="px-6 pb-4">
-                    <p className="text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+                    <p className="text-sm text-slate-600 dark:text-gray-400 leading-relaxed">{faq.a}</p>
                   </div>
                 )}
               </div>

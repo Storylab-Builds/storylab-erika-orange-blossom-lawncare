@@ -38,11 +38,11 @@ function ActivityItem({
 }: ActivityItemProps) {
   return (
     <div className={`flex items-start gap-3 py-3 ${className ?? ''}`}>
-      <div className="mt-0.5 w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
+      <div className="mt-0.5 w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center shrink-0">
         {typeIcon[type]}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-slate-900">
+        <p className="text-sm text-slate-900 dark:text-gray-200">
           {description}
           {entityLabel && onEntityClick && (
             <>
@@ -56,7 +56,7 @@ function ActivityItem({
             </>
           )}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">{timestamp}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{timestamp}</p>
       </div>
     </div>
   );

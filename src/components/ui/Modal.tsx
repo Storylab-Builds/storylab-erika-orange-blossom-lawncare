@@ -107,18 +107,18 @@ export default function Modal({
             transition={{ duration: 0.2 }}
             className={twMerge(
               clsx(
-                'relative w-full mx-4 bg-white rounded-xl shadow-2xl',
+                'relative w-full mx-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl',
                 sizeStyles[size],
               ),
             )}
           >
             {title && (
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
                 <button
                   onClick={onClose}
                   aria-label="Close dialog"
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -128,7 +128,7 @@ export default function Modal({
               <button
                 onClick={onClose}
                 aria-label="Close dialog"
-                className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors z-10"
+                className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors z-10"
               >
                 <X className="w-5 h-5" />
               </button>

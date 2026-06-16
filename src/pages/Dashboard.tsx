@@ -100,7 +100,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       {hasStatsError && (
         <div className="flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 p-3 text-sm text-error">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
           <span>Couldn&apos;t load some dashboard data. Showing what we have.</span>
         </div>
       )}
@@ -110,15 +110,15 @@ export default function Dashboard() {
         {overviewCards.map((card) => {
           const Icon = card.icon;
           return (
-            <Card key={card.label}>
+            <Card key={card.label} className="dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 font-medium">{card.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
-                  <p className="text-xs text-slate-400 mt-1">{card.change}</p>
+                  <p className="text-sm text-slate-500 dark:text-gray-500 font-medium">{card.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{card.value}</p>
+                  <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">{card.change}</p>
                 </div>
                 <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
-                  <Icon className="w-5 h-5 text-white" />
+                  <Icon className="w-5 h-5 text-white" aria-hidden="true" />
                 </div>
               </div>
             </Card>
@@ -129,47 +129,47 @@ export default function Dashboard() {
       {/* Quick Actions + Weather */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
-        <Card>
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">Quick Actions</h3>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
           <div className="space-y-2">
             <Link
               to="/customers"
               className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors text-primary font-medium text-sm"
             >
-              <Plus className="w-4 h-4" /> New Customer
+              <Plus className="w-4 h-4" aria-hidden="true" /> New Customer
             </Link>
             <Link
               to="/schedule"
               className="flex items-center gap-3 p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors text-success font-medium text-sm"
             >
-              <Plus className="w-4 h-4" /> New Job
+              <Plus className="w-4 h-4" aria-hidden="true" /> New Job
             </Link>
             <Link
               to="/schedule"
-              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-slate-700 font-medium text-sm"
+              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-gray-700 hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors text-slate-700 dark:text-gray-300 font-medium text-sm"
             >
-              <Calendar className="w-4 h-4" /> View Full Schedule
+              <Calendar className="w-4 h-4" aria-hidden="true" /> View Full Schedule
             </Link>
           </div>
         </Card>
 
         {/* Weather Widget */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Weather Forecast</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Weather Forecast</h3>
             <Link to="/weather" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
-              Details <ArrowRight className="w-3 h-3" />
+              Details <ArrowRight className="w-3 h-3" aria-hidden="true" />
             </Link>
           </div>
           {weatherLoading ? (
             <LoadingSpinner label="Loading weather..." />
           ) : weather ? (
             <>
-              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
-                <CloudRain className="w-12 h-12 text-warning" />
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100 dark:border-gray-700">
+                <CloudRain className="w-12 h-12 text-warning" aria-hidden="true" />
                 <div>
-                  <p className="text-3xl font-bold text-slate-900">{weather.current.temp}&#176;F</p>
-                  <p className="text-sm text-slate-500 capitalize">{weather.current.condition}, NE Ohio - Humidity {weather.current.humidity}%</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{weather.current.temp}&#176;F</p>
+                  <p className="text-sm text-slate-500 dark:text-gray-400 capitalize">{weather.current.condition}, NE Ohio - Humidity {weather.current.humidity}%</p>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-2">
@@ -178,13 +178,13 @@ export default function Dashboard() {
                   return (
                     <div
                       key={idx}
-                      className={`flex flex-col items-center p-2 rounded-xl ${isRisk ? 'bg-warning/10' : 'bg-slate-50'}`}
+                      className={`flex flex-col items-center p-2 rounded-xl ${isRisk ? 'bg-warning/10' : 'bg-slate-50 dark:bg-gray-700'}`}
                     >
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-slate-500 dark:text-gray-400">
                         {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                       </span>
-                      <span className="text-sm font-semibold text-slate-900 mt-1">{day.high}&#176;</span>
-                      <span className="text-xs text-slate-400">{day.precipChance}%</span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-white mt-1">{day.high}&#176;</span>
+                      <span className="text-xs text-slate-400 dark:text-gray-500">{day.precipChance}%</span>
                     </div>
                   );
                 })}
@@ -195,21 +195,21 @@ export default function Dashboard() {
       </div>
 
       {/* Today's Schedule Timeline */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-900">Today&apos;s Schedule</h3>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Today&apos;s Schedule</h3>
           <Link to="/schedule" className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
-            Full Schedule <ArrowRight className="w-3 h-3" />
+            Full Schedule <ArrowRight className="w-3 h-3" aria-hidden="true" />
           </Link>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="img" aria-label="Today's crew schedule timeline showing job assignments by hour">
           <div className="min-w-[700px]">
             {/* Time header */}
             <div className="flex items-center mb-2">
               <div className="w-24 flex-shrink-0" />
               <div className="flex-1 flex">
                 {timeSlots.map((t) => (
-                  <div key={t} className="flex-1 text-xs text-slate-400 font-medium">
+                  <div key={t} className="flex-1 text-xs text-slate-400 dark:text-gray-500 font-medium">
                     {t > 12 ? `${t - 12}PM` : t === 12 ? '12PM' : `${t}AM`}
                   </div>
                 ))}
@@ -218,8 +218,8 @@ export default function Dashboard() {
             {/* Crew rows */}
             {Array.from(crewGroups.entries()).map(([crewName, jobs]) => (
               <div key={crewName} className="flex items-center mb-2">
-                <div className="w-24 flex-shrink-0 text-xs font-semibold text-slate-600">{crewName}</div>
-                <div className="flex-1 relative h-8 bg-slate-50 rounded-lg">
+                <div className="w-24 flex-shrink-0 text-xs font-semibold text-slate-600 dark:text-gray-400">{crewName}</div>
+                <div className="flex-1 relative h-8 bg-slate-50 dark:bg-gray-700 rounded-lg">
                   {jobs.map((job) => {
                     const [startH, startM] = job.startTime.split(':').map(Number);
                     const [endH, endM] = job.endTime.split(':').map(Number);
@@ -250,25 +250,25 @@ export default function Dashboard() {
       {/* Activity Feed + Weekly Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Feed */}
-        <Card>
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Activity</h3>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Recent Activity</h3>
           <div className="space-y-3" aria-live="polite">
             {activitiesError ? (
               <div className="flex items-center gap-2 text-sm text-error">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                 <span>Couldn&apos;t load recent activity.</span>
               </div>
             ) : recentActivities.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">No recent activity yet.</p>
+              <p className="text-sm text-slate-400 dark:text-gray-500 py-6 text-center">No recent activity yet.</p>
             ) : (
               recentActivities.map((item) => {
                 const { Icon, color } = getActivityIcon(item.type);
                 return (
                   <div key={item.id} className="flex items-start gap-3">
-                    <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} />
+                    <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-700">{item.description}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{getRelativeTime(item.timestamp)}</p>
+                      <p className="text-sm text-slate-700 dark:text-gray-300">{item.description}</p>
+                      <p className="text-xs text-slate-400 dark:text-gray-500 mt-0.5">{getRelativeTime(item.timestamp)}</p>
                     </div>
                   </div>
                 );
@@ -278,8 +278,9 @@ export default function Dashboard() {
         </Card>
 
         {/* Weekly Jobs Chart */}
-        <Card>
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">Jobs This Week</h3>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Jobs This Week</h3>
+          <div role="img" aria-label="Bar chart of jobs completed per day over the last 7 days">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={weeklyJobsChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -291,6 +292,7 @@ export default function Dashboard() {
               <Bar dataKey="jobs" fill="#6366F1" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </Card>
       </div>
     </div>

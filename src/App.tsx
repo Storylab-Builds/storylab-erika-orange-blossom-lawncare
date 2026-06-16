@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './layouts/AppLayout';
 import LoadingSpinner from './components/LoadingSpinner';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -31,8 +32,9 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
           <HashRouter>
             <Suspense fallback={<LoadingSpinner fullPage size="lg" label="Loading…" />}>
               <Routes>
@@ -65,8 +67,9 @@ export default function App() {
               </Routes>
             </Suspense>
           </HashRouter>
-        </AuthProvider>
-      </QueryClientProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

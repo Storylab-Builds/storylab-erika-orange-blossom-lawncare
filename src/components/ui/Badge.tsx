@@ -10,11 +10,11 @@ export interface BadgeProps {
 }
 
 const variantStyles: Record<string, string> = {
-  success: 'bg-green-100 text-green-700',
-  warning: 'bg-amber-100 text-amber-700',
-  error: 'bg-red-100 text-red-700',
-  info: 'bg-accent-light text-primary',
-  neutral: 'bg-gray-100 text-gray-600',
+  success: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  error: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  info: 'bg-accent-light text-primary dark:bg-primary/20 dark:text-primary-light',
+  neutral: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
 };
 
 const sizeStyles: Record<string, string> = {

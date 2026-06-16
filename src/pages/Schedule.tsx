@@ -49,27 +49,27 @@ export default function Schedule() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setWeekStart((prev) => subDays(prev, 7))}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors text-slate-500 dark:text-gray-400"
             aria-label="Previous week"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5" aria-hidden="true" />
           </button>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
           </h2>
           <button
             onClick={() => setWeekStart((prev) => addDays(prev, 7))}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors text-slate-500 dark:text-gray-400"
             aria-label="Next week"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
         <div className="flex items-center gap-3 text-xs">
           {serviceColorEntries.map(([type, conf]) => (
             <div key={type} className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: conf.color }} />
-              <span className="text-slate-500">{conf.label}</span>
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: conf.color }} aria-hidden="true" />
+              <span className="text-slate-500 dark:text-gray-400">{conf.label}</span>
             </div>
           ))}
         </div>
@@ -78,10 +78,10 @@ export default function Schedule() {
       <div className="flex gap-6">
         {/* Crew Filter Sidebar */}
         <div className="w-48 flex-shrink-0">
-          <Card>
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-900">Crews</h3>
+              <Filter className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Crews</h3>
             </div>
             <div className="space-y-2">
               {crews.map((crew) => (
@@ -90,9 +90,10 @@ export default function Schedule() {
                     type="checkbox"
                     checked={visibleCrews.has(crew.id)}
                     onChange={() => toggleCrew(crew.id)}
-                    className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                    aria-label={`Show ${crew.name}`}
+                    className="w-4 h-4 rounded border-slate-300 dark:border-gray-600 text-primary focus:ring-primary/20"
                   />
-                  <span className="text-sm text-slate-700">{crew.name}</span>
+                  <span className="text-sm text-slate-700 dark:text-gray-300">{crew.name}</span>
                 </label>
               ))}
             </div>
@@ -112,17 +113,17 @@ export default function Schedule() {
                 return (
                   <div
                     key={dayIdx}
-                    className={`text-center p-2 rounded-xl ${isToday ? 'bg-primary text-white' : isHighImpact ? 'bg-warning/10' : 'bg-white'} border ${isToday ? 'border-primary' : 'border-slate-100'}`}
+                    className={`text-center p-2 rounded-xl ${isToday ? 'bg-primary text-white' : isHighImpact ? 'bg-warning/10' : 'bg-white dark:bg-gray-800'} border ${isToday ? 'border-primary' : 'border-slate-100 dark:border-gray-700'}`}
                   >
-                    <p className={`text-xs font-medium ${isToday ? 'text-white/80' : 'text-slate-500'}`}>
+                    <p className={`text-xs font-medium ${isToday ? 'text-white/80' : 'text-slate-500 dark:text-gray-400'}`}>
                       {format(day, 'EEE')}
                     </p>
-                    <p className={`text-lg font-bold ${isToday ? 'text-white' : 'text-slate-900'}`}>
+                    <p className={`text-lg font-bold ${isToday ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                       {format(day, 'd')}
                     </p>
                     {forecastDay && (
                       <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className={`text-xs ${isToday ? 'text-white/80' : 'text-slate-400'}`}>
+                        <span className={`text-xs ${isToday ? 'text-white/80' : 'text-slate-400 dark:text-gray-500'}`}>
                           {forecastDay.high}&#176; {forecastDay.precipChance}%
                         </span>
                       </div>
@@ -133,11 +134,12 @@ export default function Schedule() {
             </div>
 
             {/* Time Grid */}
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <div role="img" aria-label="Weekly schedule grid showing jobs by day, crew, and hour">
               {/* Time header row */}
               <div className="flex items-center mb-2 pl-16">
                 {timeSlots.map((t) => (
-                  <div key={t} className="flex-1 text-xs text-slate-400 font-medium text-center">
+                  <div key={t} className="flex-1 text-xs text-slate-400 dark:text-gray-500 font-medium text-center">
                     {t > 12 ? `${t - 12}PM` : t === 12 ? '12PM' : `${t}AM`}
                   </div>
                 ))}
@@ -162,10 +164,10 @@ export default function Schedule() {
 
                 if (crewEntries.length === 0) {
                   return (
-                    <div key={dayIdx} className="flex items-center mb-1 py-2 border-b border-slate-50">
-                      <div className="w-16 flex-shrink-0 text-xs font-medium text-slate-400">{format(day, 'EEE')}</div>
-                      <div className="flex-1 h-6 bg-slate-50 rounded-lg flex items-center justify-center">
-                        <span className="text-xs text-slate-300">{dayIdx === 6 ? 'Day Off' : 'No jobs'}</span>
+                    <div key={dayIdx} className="flex items-center mb-1 py-2 border-b border-slate-50 dark:border-gray-700">
+                      <div className="w-16 flex-shrink-0 text-xs font-medium text-slate-400 dark:text-gray-500">{format(day, 'EEE')}</div>
+                      <div className="flex-1 h-6 bg-slate-50 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span className="text-xs text-slate-300 dark:text-gray-500">{dayIdx === 6 ? 'Day Off' : 'No jobs'}</span>
                       </div>
                     </div>
                   );
@@ -175,12 +177,12 @@ export default function Schedule() {
                   const crewInfo = crews.find((c) => c.id === crewId);
                   return (
                     <div key={`${dayIdx}-${crewId}`} className="flex items-center mb-1">
-                      <div className="w-16 flex-shrink-0 text-[10px] text-slate-400">
-                        {crewIdx === 0 && <span className="font-medium text-xs text-slate-500">{format(day, 'EEE')}</span>}
+                      <div className="w-16 flex-shrink-0 text-[10px] text-slate-400 dark:text-gray-500">
+                        {crewIdx === 0 && <span className="font-medium text-xs text-slate-500 dark:text-gray-400">{format(day, 'EEE')}</span>}
                         <br />
-                        <span className="text-slate-300">{crewInfo?.name ?? crewId}</span>
+                        <span className="text-slate-300 dark:text-gray-500">{crewInfo?.name ?? crewId}</span>
                       </div>
-                      <div className="flex-1 relative h-7 bg-slate-50 rounded-lg">
+                      <div className="flex-1 relative h-7 bg-slate-50 dark:bg-gray-700 rounded-lg">
                         {crewJobs.map((job) => {
                           const [startH, startM] = job.startTime.split(':').map(Number);
                           const [endH, endM] = job.endTime.split(':').map(Number);
@@ -212,6 +214,7 @@ export default function Schedule() {
                   );
                 });
               })}
+              </div>
             </Card>
           </div>
         </div>

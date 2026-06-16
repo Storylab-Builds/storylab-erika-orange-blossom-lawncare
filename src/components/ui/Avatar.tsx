@@ -36,7 +36,7 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        'rounded-full bg-accent-light text-primary font-semibold',
+        'rounded-full bg-accent-light text-primary dark:bg-primary/20 dark:text-primary-light font-semibold',
         'flex items-center justify-center',
         sizeStyles[size],
         className,

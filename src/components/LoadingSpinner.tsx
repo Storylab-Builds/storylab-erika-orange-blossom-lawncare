@@ -31,7 +31,7 @@ export default function LoadingSpinner({
     <div className={cn('flex flex-col items-center gap-3', fullPage && 'min-h-[400px] justify-center')}>
       <div
         className={cn(
-          'rounded-full border-gray-200 border-t-indigo-500 animate-spin',
+          'rounded-full border-gray-200 dark:border-gray-700 border-t-indigo-500 animate-spin',
           sizeMap[size],
           className,
         )}
@@ -39,7 +39,7 @@ export default function LoadingSpinner({
         aria-label={label || 'Loading'}
       />
       {label && (
-        <p className={cn('text-slate-500 font-medium', labelSizeMap[size])}>
+        <p className={cn('text-slate-500 dark:text-gray-400 font-medium', labelSizeMap[size])}>
           {label}
         </p>
       )}

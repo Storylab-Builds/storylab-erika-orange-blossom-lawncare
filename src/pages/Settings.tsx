@@ -230,8 +230,8 @@ export default function Settings() {
                 aria-current={activeTab === tab.key ? 'page' : undefined}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
                   activeTab === tab.key
-                    ? 'bg-accent-light text-primary'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    ? 'bg-accent-light dark:bg-primary/20 text-primary'
+                    : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800'
                 }`}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
@@ -250,7 +250,7 @@ export default function Settings() {
           </div>
         )}
         {isLoading && (
-          <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500" role="status">
+          <div className="mb-4 rounded-xl border border-slate-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 px-4 py-3 text-sm text-slate-500 dark:text-gray-400" role="status">
             Loading saved settings…
           </div>
         )}
@@ -258,7 +258,7 @@ export default function Settings() {
         {activeTab === 'company' && (
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Company Profile</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Company Profile</h3>
               <SaveButton
                 onClick={() => saveCompany.mutate({ key: 'company', value: company })}
                 isPending={saveCompany.isPending}
@@ -269,7 +269,7 @@ export default function Settings() {
             <div className="grid grid-cols-2 gap-6">
               {(Object.keys(DEFAULT_COMPANY) as (keyof CompanyInfo)[]).map((key) => (
                 <div key={key}>
-                  <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
                   <input
@@ -277,7 +277,7 @@ export default function Settings() {
                     value={company[key]}
                     onChange={(e) => setCompany((prev) => ({ ...prev, [key]: e.target.value }))}
                     aria-label={key.replace(/([A-Z])/g, ' $1').trim()}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
               ))}
@@ -288,7 +288,7 @@ export default function Settings() {
         {activeTab === 'services' && (
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Service Types & Pricing</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Service Types & Pricing</h3>
               <SaveButton
                 onClick={() =>
                   saveServices.mutate({ key: 'activeServices', value: Array.from(activeServices) })
@@ -301,7 +301,7 @@ export default function Settings() {
               {serviceEntries.map((svc) => {
                 const isActive = activeServices.has(svc.key);
                 return (
-                  <div key={svc.key} className={`flex items-center gap-4 p-4 rounded-xl border ${isActive ? 'bg-white border-slate-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                  <div key={svc.key} className={`flex items-center gap-4 p-4 rounded-xl border ${isActive ? 'bg-white dark:bg-gray-800 border-slate-100 dark:border-gray-700' : 'bg-slate-50 dark:bg-gray-700 border-slate-100 dark:border-gray-700 opacity-60'}`}>
                     <label className="relative inline-flex cursor-pointer">
                       <input
                         type="checkbox"
@@ -312,10 +312,10 @@ export default function Settings() {
                         className="sr-only peer"
                         aria-label={`Toggle ${svc.label}`}
                       />
-                      <div className="w-9 h-5 bg-slate-200 peer-checked:bg-primary rounded-full peer-focus:ring-2 peer-focus:ring-primary/20 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-9 h-5 bg-slate-200 dark:bg-gray-600 peer-checked:bg-primary rounded-full peer-focus:ring-2 peer-focus:ring-primary/20 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">{svc.label}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">{svc.label}</p>
                     </div>
                     <div
                       className="w-4 h-4 rounded-full"
@@ -333,8 +333,8 @@ export default function Settings() {
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Weather Thresholds</h3>
-                <p className="text-sm text-slate-500 mt-1">Configure when weather conditions trigger automatic rescheduling</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Weather Thresholds</h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Configure when weather conditions trigger automatic rescheduling</p>
               </div>
               <SaveButton
                 onClick={() => saveWeather.mutate({ key: 'weatherThresholds', value: weather })}
@@ -346,9 +346,9 @@ export default function Settings() {
               {weatherThresholdFields.map((t) => {
                 const Icon = t.icon;
                 return (
-                  <div key={t.field} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    <p className="flex-1 text-sm text-slate-700">{t.label}</p>
+                  <div key={t.field} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-gray-700 border border-slate-100 dark:border-gray-700">
+                    <Icon className="w-5 h-5 text-slate-400 dark:text-gray-500 flex-shrink-0" />
+                    <p className="flex-1 text-sm text-slate-700 dark:text-gray-300">{t.label}</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -357,9 +357,9 @@ export default function Settings() {
                           setWeather((prev) => ({ ...prev, [t.field]: Number(e.target.value) }))
                         }
                         aria-label={t.label}
-                        className="w-20 px-3 py-2 rounded-xl border border-slate-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        className="w-20 px-3 py-2 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
-                      <span className="text-sm text-slate-500 w-8">{t.unit}</span>
+                      <span className="text-sm text-slate-500 dark:text-gray-400 w-8">{t.unit}</span>
                     </div>
                   </div>
                 );
@@ -371,7 +371,7 @@ export default function Settings() {
         {activeTab === 'notifications' && (
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Notification Templates</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notification Templates</h3>
               <SaveButton
                 onClick={() =>
                   saveNotifications.mutate({ key: 'notificationTemplates', value: notifications })
@@ -382,7 +382,7 @@ export default function Settings() {
             </div>
             <div className="space-y-3">
               {notifications.map((tmpl, idx) => (
-                <div key={tmpl.name} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100">
+                <div key={tmpl.name} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 dark:border-gray-700">
                   <label className="relative inline-flex cursor-pointer">
                     <input
                       type="checkbox"
@@ -393,10 +393,10 @@ export default function Settings() {
                       className="sr-only peer"
                       aria-label={`Toggle ${tmpl.name}`}
                     />
-                    <div className="w-9 h-5 bg-slate-200 peer-checked:bg-primary rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    <div className="w-9 h-5 bg-slate-200 dark:bg-gray-600 peer-checked:bg-primary rounded-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                   </label>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">{tmpl.name}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{tmpl.name}</p>
                   </div>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${
                     tmpl.channel === 'sms' ? 'bg-success/10 text-success' :
@@ -415,7 +415,7 @@ export default function Settings() {
         {activeTab === 'hours' && (
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Working Hours & Capacity</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Working Hours & Capacity</h3>
               <SaveButton
                 onClick={() => saveHours.mutate({ key: 'workingHours', value: hours })}
                 isPending={saveHours.isPending}
@@ -424,69 +424,69 @@ export default function Settings() {
             </div>
             <div className="grid grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Start Time</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Start Time</label>
                 <input
                   type="text"
                   value={hours.start}
                   onChange={(e) => setHours((prev) => ({ ...prev, start: e.target.value }))}
                   aria-label="Start time"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">End Time</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">End Time</label>
                 <input
                   type="text"
                   value={hours.end}
                   onChange={(e) => setHours((prev) => ({ ...prev, end: e.target.value }))}
                   aria-label="End time"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Max Jobs Per Crew</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Max Jobs Per Crew</label>
                 <input
                   type="number"
                   value={hours.maxJobsPerCrew}
                   onChange={(e) => setHours((prev) => ({ ...prev, maxJobsPerCrew: Number(e.target.value) }))}
                   aria-label="Max jobs per crew"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Max Crews Per Day</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Max Crews Per Day</label>
                 <input
                   type="number"
                   value={hours.maxCrewsPerDay}
                   onChange={(e) => setHours((prev) => ({ ...prev, maxCrewsPerDay: Number(e.target.value) }))}
                   aria-label="Max crews per day"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Break Duration</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Break Duration</label>
                 <input
                   type="text"
                   value={hours.breakDuration}
                   onChange={(e) => setHours((prev) => ({ ...prev, breakDuration: e.target.value }))}
                   aria-label="Break duration"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Travel Buffer</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Travel Buffer</label>
                 <input
                   type="text"
                   value={hours.travelBuffer}
                   onChange={(e) => setHours((prev) => ({ ...prev, travelBuffer: e.target.value }))}
                   aria-label="Travel buffer"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Working Days</label>
+              <label className="block text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Working Days</label>
               <div className="flex flex-wrap gap-2">
                 {ALL_DAYS.map((day) => {
                   const active = hours.days.includes(day);
@@ -497,7 +497,7 @@ export default function Settings() {
                       aria-label={`${day} ${active ? 'active' : 'inactive'}`}
                       aria-pressed={active}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                        active ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 border border-slate-200'
+                        active ? 'bg-primary text-white' : 'bg-slate-50 dark:bg-gray-700 text-slate-400 dark:text-gray-400 border border-slate-200 dark:border-gray-600'
                       }`}
                     >
                       {day.substring(0, 3)}
