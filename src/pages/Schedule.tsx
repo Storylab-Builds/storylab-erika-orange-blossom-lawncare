@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, AlertTriangle, CalendarPlus, Download, Check } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek, isToday as dfIsToday } from 'date-fns';
 import { useJobs } from '@/hooks';
 import { SERVICE_TYPES } from '@/lib/constants';
@@ -158,6 +158,7 @@ export default function Schedule() {
   const [formDate, setFormDate] = useState<string | undefined>(undefined);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [feedCopied, setFeedCopied] = useState(false);
 
   const { data: allJobs, isLoading, isError, refetch } = useJobs();
 
@@ -197,6 +198,16 @@ export default function Schedule() {
     setFormDate(date);
     setIsJobModalOpen(true);
   };
+  const copyCalendarFeed = () => {
+    const url = `${window.location.origin}/api/calendar/jobs.ics?token=obs-dev-feed`;
+    navigator.clipboard?.writeText(url).then(
+      () => {
+        setFeedCopied(true);
+        window.setTimeout(() => setFeedCopied(false), 2500);
+      },
+      () => window.prompt('Copy this calendar feed URL:', url),
+    );
+  };
 
   const weekLabel = `${format(weekStart, 'MMM d')} – ${format(
     addDays(weekStart, 6),
@@ -230,13 +241,31 @@ export default function Schedule() {
             {weekLabel}
           </h2>
         </div>
-        <Button
-          size="sm"
-          icon={<Plus className="w-4 h-4" aria-hidden="true" />}
-          onClick={() => openNewJob(format(weekStart, 'yyyy-MM-dd'))}
-        >
-          New Job
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="/api/calendar/jobs.ics?token=obs-dev-feed"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors"
+            title="Download an iCalendar file you can import into Google Calendar, Apple Calendar, or Outlook"
+          >
+            <Download className="w-4 h-4" aria-hidden="true" />
+            Export .ics
+          </a>
+          <button
+            onClick={copyCalendarFeed}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors"
+            title="Copy the live feed URL. In Google Calendar: Other calendars -> From URL -> paste."
+          >
+            {feedCopied ? <Check className="w-4 h-4 text-success" aria-hidden="true" /> : <CalendarPlus className="w-4 h-4" aria-hidden="true" />}
+            {feedCopied ? 'Feed URL copied!' : 'Add to Google Calendar'}
+          </button>
+          <Button
+            size="sm"
+            icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+            onClick={() => openNewJob(format(weekStart, 'yyyy-MM-dd'))}
+          >
+            New Job
+          </Button>
+        </div>
       </div>
 
       <JobFormModal

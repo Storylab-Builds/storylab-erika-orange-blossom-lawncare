@@ -5,6 +5,7 @@ import { errorHandler, notFound } from './middleware/error';
 import { requireAuth } from './middleware/auth';
 import authRoutes from './routes/auth';
 import publicRoutes from './routes/public';
+import calendarRoutes from './routes/calendar';
 import customerRoutes from './routes/customers';
 import jobRoutes from './routes/jobs';
 import crewRoutes from './routes/crews';
@@ -27,6 +28,8 @@ app.get('/api/health', (_req, res) => {
 // Public endpoints (no auth) — auth + marketing-site quote capture
 app.use('/api/auth', authRoutes);
 app.use('/api/public', publicRoutes);
+// Calendar ICS feed — token-gated; fetched by Google Calendar with no auth headers.
+app.use('/api/calendar', calendarRoutes);
 
 // Authenticated API
 app.use('/api/customers', requireAuth, customerRoutes);
