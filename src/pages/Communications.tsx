@@ -13,11 +13,12 @@ import {
   Users,
   Calendar,
 } from 'lucide-react';
-import { notifications } from '@/data/mockData';
+import { useNotifications } from '@/hooks';
 import { getRelativeTime } from '@/lib/utils';
 import type { Notification } from '@/types';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function getStatusIcon(status: Notification['status']): { Icon: typeof CheckCircle2; color: string } {
   switch (status) {
@@ -34,6 +35,12 @@ type TabKey = 'recent' | 'byType' | 'byStatus';
 
 export default function Communications() {
   const [activeTab, setActiveTab] = useState<TabKey>('recent');
+  const { data, isLoading, isError } = useNotifications();
+  const notifications = data ?? [];
+
+  if (isLoading) {
+    return <LoadingSpinner fullPage label="Loading communications..." />;
+  }
 
   const sentToday = notifications.filter((n) => {
     const sentDate = new Date(n.sentAt);
@@ -70,6 +77,13 @@ export default function Communications() {
 
   return (
     <div className="space-y-6">
+      {isError && (
+        <div className="flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 p-3 text-sm text-error">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>Couldn&apos;t load notifications. Please try again.</span>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card>
@@ -123,7 +137,10 @@ export default function Communications() {
         <Card padding="lg">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Notifications</h3>
           <div className="space-y-3">
-            {notifications.map((n) => {
+            {notifications.length === 0 ? (
+              <p className="text-sm text-slate-400 py-8 text-center">No notifications yet.</p>
+            ) : (
+              notifications.map((n) => {
               const { Icon: StatusIcon, color } = getStatusIcon(n.status);
               return (
                 <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
@@ -147,7 +164,8 @@ export default function Communications() {
                   <span className="text-xs text-slate-400">{getRelativeTime(n.sentAt)}</span>
                 </div>
               );
-            })}
+              })
+            )}
           </div>
         </Card>
       )}

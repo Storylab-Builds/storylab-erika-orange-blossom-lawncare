@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarCheck,
@@ -14,8 +15,8 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useDashboardStats, useDailyMetrics } from '@/hooks';
-import { useTodayJobs, useWeather } from '@/hooks';
-import { activities, crews } from '@/data/mockData';
+import { useTodayJobs, useWeather, useActivities } from '@/hooks';
+import { crews } from '@/data/mockData';
 import { formatCurrency, getRelativeTime } from '@/lib/utils';
 import type { DashboardStats, Activity } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -45,14 +46,45 @@ function getActivityIcon(type: Activity['type']) {
 }
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: todayJobs, isLoading: jobsLoading } = useTodayJobs();
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats();
+  const { data: todayJobs, isLoading: jobsLoading, isError: jobsError } = useTodayJobs();
   const { data: weather, isLoading: weatherLoading } = useWeather();
   const { data: metrics } = useDailyMetrics(7);
+  const { data: activities, isError: activitiesError } = useActivities(8);
+
+  // Time slots for the schedule timeline (stable, hoisted before any early return)
+  const timeSlots = useMemo(() => [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], []);
+
+  // Build schedule timeline from real today jobs, grouped by crew
+  type JobItem = NonNullable<typeof todayJobs>[number];
+  const crewGroups = useMemo(() => {
+    const groups = new Map<string, JobItem[]>();
+    (todayJobs ?? []).forEach((job) => {
+      const existing = groups.get(job.crewName) ?? [];
+      existing.push(job);
+      groups.set(job.crewName, existing);
+    });
+    return groups;
+  }, [todayJobs]);
+
+  // Weekly jobs chart from metrics
+  const weeklyJobsChart = useMemo(
+    () =>
+      (metrics ?? []).map((m) => ({
+        name: new Date(m.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        jobs: m.jobsCompleted,
+      })),
+    [metrics]
+  );
+
+  // Recent activities (last 8) from the API
+  const recentActivities = activities ?? [];
 
   if (statsLoading || jobsLoading) {
     return <LoadingSpinner fullPage label="Loading dashboard..." />;
   }
+
+  const hasStatsError = statsError || jobsError;
 
   const overviewCards = [
     { label: 'Jobs Scheduled', value: String(stats?.todayJobs ?? 0), change: `${stats?.todayCompleted ?? 0} completed`, icon: CalendarCheck, color: 'bg-primary' },
@@ -61,31 +93,18 @@ export default function Dashboard() {
     { label: 'Weekly Revenue', value: formatCurrency(stats?.weeklyRevenue ?? 0), change: `+${stats?.weeklyRevenueChange ?? 0}% vs last week`, icon: DollarSign, color: 'bg-primary-dark' },
   ];
 
-  // Build schedule timeline from real today jobs, grouped by crew
-  type JobItem = NonNullable<typeof todayJobs>[number];
-  const crewGroups = new Map<string, JobItem[]>();
-  (todayJobs ?? []).forEach((job) => {
-    const existing = crewGroups.get(job.crewName) ?? [];
-    existing.push(job);
-    crewGroups.set(job.crewName, existing);
-  });
-
-  const timeSlots = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-
-  // Weekly jobs chart from metrics
-  const weeklyJobsChart = (metrics ?? []).map((m) => ({
-    name: new Date(m.date).toLocaleDateString('en-US', { weekday: 'short' }),
-    jobs: m.jobsCompleted,
-  }));
-
-  // Recent activities (last 10)
-  const recentActivities = activities.slice(0, 8);
-
   // Weather forecast
   const forecast = weather?.forecast?.slice(0, 7) ?? [];
 
   return (
     <div className="space-y-6">
+      {hasStatsError && (
+        <div className="flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 p-3 text-sm text-error">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span>Couldn&apos;t load some dashboard data. Showing what we have.</span>
+        </div>
+      )}
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {overviewCards.map((card) => {
@@ -234,18 +253,27 @@ export default function Dashboard() {
         <Card>
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Activity</h3>
           <div className="space-y-3" aria-live="polite">
-            {recentActivities.map((item) => {
-              const { Icon, color } = getActivityIcon(item.type);
-              return (
-                <div key={item.id} className="flex items-start gap-3">
-                  <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-700">{item.description}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{getRelativeTime(item.timestamp)}</p>
+            {activitiesError ? (
+              <div className="flex items-center gap-2 text-sm text-error">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>Couldn&apos;t load recent activity.</span>
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <p className="text-sm text-slate-400 py-6 text-center">No recent activity yet.</p>
+            ) : (
+              recentActivities.map((item) => {
+                const { Icon, color } = getActivityIcon(item.type);
+                return (
+                  <div key={item.id} className="flex items-start gap-3">
+                    <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700">{item.description}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{getRelativeTime(item.timestamp)}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </Card>
 
@@ -260,7 +288,7 @@ export default function Dashboard() {
               <Tooltip
                 contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }}
               />
-              <Bar dataKey="jobs" fill="#6366F1" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="jobs" fill="#6366F1" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

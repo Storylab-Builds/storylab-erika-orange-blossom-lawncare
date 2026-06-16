@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   DollarSign,
   TrendingUp,
@@ -30,26 +31,33 @@ export default function Reports() {
     : 0;
   const activeCustomerCount = customers.filter((c) => c.status === 'active').length;
 
-  // Revenue chart data
-  const revenueChartData = (revenueData ?? []).map((d) => ({
-    day: formatDate(d.date).replace(/, \d{4}$/, ''),
-    revenue: d.revenue,
-  }));
+  // Revenue chart data (memoized on stable query data to avoid Recharts re-animation)
+  const revenueChartData = useMemo(
+    () =>
+      (revenueData ?? []).map((d) => ({
+        day: formatDate(d.date).replace(/, \d{4}$/, ''),
+        revenue: d.revenue,
+      })),
+    [revenueData],
+  );
 
   // Weekly grouped jobs data
-  const weeklyJobsData: { week: string; completed: number; scheduled: number }[] = [];
-  if (metrics) {
-    for (let i = 0; i < metrics.length; i += 7) {
-      const weekSlice = metrics.slice(i, i + 7);
-      if (weekSlice.length > 0) {
-        weeklyJobsData.push({
-          week: formatDate(weekSlice[0].date).replace(/, \d{4}$/, ''),
-          completed: weekSlice.reduce((s, m) => s + m.jobsCompleted, 0),
-          scheduled: weekSlice.reduce((s, m) => s + m.jobsScheduled, 0),
-        });
+  const weeklyJobsData = useMemo(() => {
+    const out: { week: string; completed: number; scheduled: number }[] = [];
+    if (metrics) {
+      for (let i = 0; i < metrics.length; i += 7) {
+        const weekSlice = metrics.slice(i, i + 7);
+        if (weekSlice.length > 0) {
+          out.push({
+            week: formatDate(weekSlice[0].date).replace(/, \d{4}$/, ''),
+            completed: weekSlice.reduce((s, m) => s + m.jobsCompleted, 0),
+            scheduled: weekSlice.reduce((s, m) => s + m.jobsScheduled, 0),
+          });
+        }
       }
     }
-  }
+    return out;
+  }, [metrics]);
 
   return (
     <div className="space-y-6">
@@ -92,7 +100,7 @@ export default function Reports() {
                 contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }}
                 formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
               />
-              <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="revenue" stroke="#6366F1" strokeWidth={2} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </Card>
@@ -108,8 +116,8 @@ export default function Reports() {
               <Tooltip
                 contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }}
               />
-              <Bar dataKey="scheduled" fill="#A5B4FC" radius={[6, 6, 0, 0]} name="Scheduled" />
-              <Bar dataKey="completed" fill="#6366F1" radius={[6, 6, 0, 0]} name="Completed" />
+              <Bar dataKey="scheduled" fill="#A5B4FC" radius={[6, 6, 0, 0]} name="Scheduled" isAnimationActive={false} />
+              <Bar dataKey="completed" fill="#6366F1" radius={[6, 6, 0, 0]} name="Completed" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

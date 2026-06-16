@@ -12,7 +12,7 @@ import {
   Timer,
   ChevronRight,
 } from 'lucide-react';
-import { useTodayJobs } from '@/hooks';
+import { useTodayJobs, useUpdateJob } from '@/hooks';
 import { useAppStore } from '@/store/appStore';
 import { SERVICE_TYPES } from '@/lib/constants';
 import { formatTime, getRelativeTime } from '@/lib/utils';
@@ -31,14 +31,17 @@ function getJobStatusStyle(status: Job['status']): { bg: string; border: string 
 }
 
 export default function FieldOps() {
+  // Clock-in / break toggles are intentionally client-only operator-session UI
+  // state for now: they represent the device operator's session, not a specific
+  // employee record, so they are not persisted to the backend.
   const clockedIn = useAppStore((s) => s.clockedIn);
   const clockInTime = useAppStore((s) => s.clockInTime);
   const onBreak = useAppStore((s) => s.onBreak);
   const toggleClockIn = useAppStore((s) => s.toggleClockIn);
   const toggleBreak = useAppStore((s) => s.toggleBreak);
-  const completeJob = useAppStore((s) => s.completeJob);
-  const setActiveJob = useAppStore((s) => s.setActiveJob);
-  const activeJobId = useAppStore((s) => s.activeJobId);
+
+  // Job status changes persist via the API (jobs query invalidates/refetches).
+  const updateJob = useUpdateJob();
 
   // Break timer: counts up in seconds while onBreak is true
   const [breakSeconds, setBreakSeconds] = useState(0);
@@ -202,7 +205,8 @@ export default function FieldOps() {
                     <Button
                       className="flex-1"
                       icon={<Play className="w-4 h-4" />}
-                      onClick={() => setActiveJob(job.id)}
+                      disabled={updateJob.isPending}
+                      onClick={() => updateJob.mutate({ id: job.id, status: 'in-progress' })}
                     >
                       Start Job
                     </Button>
@@ -212,7 +216,8 @@ export default function FieldOps() {
                       className="flex-1"
                       variant="primary"
                       icon={<CheckCircle2 className="w-4 h-4" />}
-                      onClick={() => completeJob(job.id)}
+                      disabled={updateJob.isPending}
+                      onClick={() => updateJob.mutate({ id: job.id, status: 'completed' })}
                     >
                       Complete Job
                     </Button>

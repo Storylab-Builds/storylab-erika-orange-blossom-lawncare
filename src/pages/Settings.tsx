@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Building2,
   Scissors,
@@ -6,17 +6,27 @@ import {
   Bell,
   Clock,
   Save,
-  DollarSign,
+  Check,
   Thermometer,
   Droplets,
   Wind,
   Snowflake,
 } from 'lucide-react';
 import { SERVICE_TYPES, WEATHER_THRESHOLDS } from '@/lib/constants';
+import { useSettings, useSaveSetting } from '@/hooks';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
-const companyInfo = {
+type CompanyInfo = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  website: string;
+  license: string;
+};
+
+const DEFAULT_COMPANY: CompanyInfo = {
   name: 'Orange Blossom Special Lawncare',
   phone: '(330) 555-0100',
   email: 'info@obslawncare.com',
@@ -31,13 +41,15 @@ const serviceEntries = Object.entries(SERVICE_TYPES).map(([key, conf]) => ({
   active: !['snow-removal', 'fall-cleanup', 'leaf-removal'].includes(key),
 }));
 
+const DEFAULT_ACTIVE_SERVICES = serviceEntries.filter((s) => s.active).map((s) => s.key);
+
 type NotificationTemplate = {
   name: string;
   channel: 'sms' | 'email' | 'both';
   active: boolean;
 };
 
-const notificationTemplates: NotificationTemplate[] = [
+const DEFAULT_NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
   { name: 'Service Reminder (24hr)', channel: 'sms', active: true },
   { name: 'Service Completed', channel: 'email', active: true },
   { name: 'Weather Reschedule', channel: 'both', active: true },
@@ -47,7 +59,17 @@ const notificationTemplates: NotificationTemplate[] = [
   { name: 'Seasonal Promotion', channel: 'email', active: false },
 ];
 
-const workingHours = {
+type WorkingHours = {
+  start: string;
+  end: string;
+  days: string[];
+  maxJobsPerCrew: number;
+  maxCrewsPerDay: number;
+  breakDuration: string;
+  travelBuffer: string;
+};
+
+const DEFAULT_WORKING_HOURS: WorkingHours = {
   start: '7:00 AM',
   end: '5:00 PM',
   days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -57,13 +79,96 @@ const workingHours = {
   travelBuffer: '15 min',
 };
 
+type WeatherThresholds = {
+  rainCancel: number;
+  rainDelay: number;
+  windCancel: number;
+  heatCaution: number;
+  snowEmergency: number;
+};
+
+const DEFAULT_WEATHER_THRESHOLDS: WeatherThresholds = {
+  rainCancel: WEATHER_THRESHOLDS.rain.cancelThreshold,
+  rainDelay: WEATHER_THRESHOLDS.rain.delayThreshold,
+  windCancel: WEATHER_THRESHOLDS.wind.cancelThreshold,
+  heatCaution: WEATHER_THRESHOLDS.heat.cautionThreshold,
+  snowEmergency: WEATHER_THRESHOLDS.snow.emergencyThreshold,
+};
+
+const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 type SettingsTab = 'company' | 'services' | 'weather' | 'notifications' | 'hours';
+
+/** Saved/Saving indicator driven by a mutation's isPending/isSuccess. */
+function SaveButton({
+  onClick,
+  isPending,
+  isSuccess,
+  label = 'Save',
+}: {
+  onClick: () => void;
+  isPending: boolean;
+  isSuccess: boolean;
+  label?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      {isSuccess && !isPending && (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-success" role="status">
+          <Check className="w-3.5 h-3.5" /> Saved
+        </span>
+      )}
+      <Button
+        onClick={onClick}
+        loading={isPending}
+        icon={!isPending ? <Save className="w-4 h-4" /> : undefined}
+      >
+        {isPending ? 'Saving…' : label}
+      </Button>
+    </div>
+  );
+}
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
-  const [activeServices, setActiveServices] = useState<Set<string>>(
-    () => new Set(serviceEntries.filter((s) => s.active).map((s) => s.key)),
+
+  const { data: settings, isLoading, isError } = useSettings();
+  const saveCompany = useSaveSetting();
+  const saveWeather = useSaveSetting();
+  const saveNotifications = useSaveSetting();
+  const saveHours = useSaveSetting();
+  const saveServices = useSaveSetting();
+
+  // Local controlled state, seeded from hardcoded defaults until settings load.
+  const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY);
+  const [weather, setWeather] = useState<WeatherThresholds>(DEFAULT_WEATHER_THRESHOLDS);
+  const [notifications, setNotifications] = useState<NotificationTemplate[]>(
+    DEFAULT_NOTIFICATION_TEMPLATES,
   );
+  const [hours, setHours] = useState<WorkingHours>(DEFAULT_WORKING_HOURS);
+  const [activeServices, setActiveServices] = useState<Set<string>>(
+    () => new Set(DEFAULT_ACTIVE_SERVICES),
+  );
+
+  // Sync local state once persisted settings arrive (keys may be absent → keep defaults).
+  useEffect(() => {
+    if (!settings) return;
+    if (settings.company && typeof settings.company === 'object') {
+      setCompany((prev) => ({ ...prev, ...(settings.company as Partial<CompanyInfo>) }));
+    }
+    if (settings.weatherThresholds && typeof settings.weatherThresholds === 'object') {
+      setWeather((prev) => ({ ...prev, ...(settings.weatherThresholds as Partial<WeatherThresholds>) }));
+    }
+    if (Array.isArray(settings.notificationTemplates)) {
+      setNotifications(settings.notificationTemplates as NotificationTemplate[]);
+    }
+    if (settings.workingHours && typeof settings.workingHours === 'object') {
+      setHours((prev) => ({ ...prev, ...(settings.workingHours as Partial<WorkingHours>) }));
+    }
+    if (Array.isArray(settings.activeServices)) {
+      setActiveServices(new Set(settings.activeServices as string[]));
+    }
+  }, [settings]);
 
   const toggleService = (key: string) => {
     setActiveServices((prev) => {
@@ -71,6 +176,22 @@ export default function Settings() {
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
+    });
+  };
+
+  const toggleNotification = (idx: number) => {
+    setNotifications((prev) =>
+      prev.map((t, i) => (i === idx ? { ...t, active: !t.active } : t)),
+    );
+  };
+
+  const toggleWorkingDay = (day: string) => {
+    setHours((prev) => {
+      const has = prev.days.includes(day);
+      return {
+        ...prev,
+        days: has ? prev.days.filter((d) => d !== day) : [...prev.days, day],
+      };
     });
   };
 
@@ -82,12 +203,17 @@ export default function Settings() {
     { key: 'hours' as const, label: 'Working Hours', icon: Clock },
   ];
 
-  const weatherThresholdEntries = [
-    { label: 'Cancel if rain probability above', value: String(WEATHER_THRESHOLDS.rain.cancelThreshold), unit: '%', icon: Droplets },
-    { label: 'Delay if rain probability above', value: String(WEATHER_THRESHOLDS.rain.delayThreshold), unit: '%', icon: Droplets },
-    { label: 'Cancel if wind speed above', value: String(WEATHER_THRESHOLDS.wind.cancelThreshold), unit: 'mph', icon: Wind },
-    { label: 'Caution if temperature above', value: String(WEATHER_THRESHOLDS.heat.cautionThreshold), unit: '°F', icon: Thermometer },
-    { label: 'Snow emergency threshold', value: String(WEATHER_THRESHOLDS.snow.emergencyThreshold), unit: 'in', icon: Snowflake },
+  const weatherThresholdFields: {
+    label: string;
+    field: keyof WeatherThresholds;
+    unit: string;
+    icon: typeof Droplets;
+  }[] = [
+    { label: 'Cancel if rain probability above', field: 'rainCancel', unit: '%', icon: Droplets },
+    { label: 'Delay if rain probability above', field: 'rainDelay', unit: '%', icon: Droplets },
+    { label: 'Cancel if wind speed above', field: 'windCancel', unit: 'mph', icon: Wind },
+    { label: 'Caution if temperature above', field: 'heatCaution', unit: '°F', icon: Thermometer },
+    { label: 'Snow emergency threshold', field: 'snowEmergency', unit: 'in', icon: Snowflake },
   ];
 
   return (
@@ -118,21 +244,38 @@ export default function Settings() {
 
       {/* Content */}
       <div className="flex-1">
+        {isError && (
+          <div className="mb-4 rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-sm text-error" role="alert">
+            Couldn't load saved settings. Showing defaults — your changes will still be saved.
+          </div>
+        )}
+        {isLoading && (
+          <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500" role="status">
+            Loading saved settings…
+          </div>
+        )}
+
         {activeTab === 'company' && (
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Company Profile</h3>
-              <Button icon={<Save className="w-4 h-4" />}>Save Changes</Button>
+              <SaveButton
+                onClick={() => saveCompany.mutate({ key: 'company', value: company })}
+                isPending={saveCompany.isPending}
+                isSuccess={saveCompany.isSuccess}
+                label="Save Changes"
+              />
             </div>
             <div className="grid grid-cols-2 gap-6">
-              {Object.entries(companyInfo).map(([key, value]) => (
+              {(Object.keys(DEFAULT_COMPANY) as (keyof CompanyInfo)[]).map((key) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
                   <input
                     type="text"
-                    defaultValue={value}
+                    value={company[key]}
+                    onChange={(e) => setCompany((prev) => ({ ...prev, [key]: e.target.value }))}
                     aria-label={key.replace(/([A-Z])/g, ' $1').trim()}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
@@ -146,7 +289,13 @@ export default function Settings() {
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Service Types & Pricing</h3>
-              <Button>+ Add Service</Button>
+              <SaveButton
+                onClick={() =>
+                  saveServices.mutate({ key: 'activeServices', value: Array.from(activeServices) })
+                }
+                isPending={saveServices.isPending}
+                isSuccess={saveServices.isSuccess}
+              />
             </div>
             <div className="space-y-3">
               {serviceEntries.map((svc) => {
@@ -187,19 +336,26 @@ export default function Settings() {
                 <h3 className="text-lg font-semibold text-slate-900">Weather Thresholds</h3>
                 <p className="text-sm text-slate-500 mt-1">Configure when weather conditions trigger automatic rescheduling</p>
               </div>
-              <Button icon={<Save className="w-4 h-4" />}>Save</Button>
+              <SaveButton
+                onClick={() => saveWeather.mutate({ key: 'weatherThresholds', value: weather })}
+                isPending={saveWeather.isPending}
+                isSuccess={saveWeather.isSuccess}
+              />
             </div>
             <div className="space-y-4">
-              {weatherThresholdEntries.map((t, idx) => {
+              {weatherThresholdFields.map((t) => {
                 const Icon = t.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div key={t.field} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                     <p className="flex-1 text-sm text-slate-700">{t.label}</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
-                        defaultValue={t.value}
+                        value={weather[t.field]}
+                        onChange={(e) =>
+                          setWeather((prev) => ({ ...prev, [t.field]: Number(e.target.value) }))
+                        }
                         aria-label={t.label}
                         className="w-20 px-3 py-2 rounded-xl border border-slate-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
@@ -216,17 +372,24 @@ export default function Settings() {
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Notification Templates</h3>
-              <Button icon={<Save className="w-4 h-4" />}>Save</Button>
+              <SaveButton
+                onClick={() =>
+                  saveNotifications.mutate({ key: 'notificationTemplates', value: notifications })
+                }
+                isPending={saveNotifications.isPending}
+                isSuccess={saveNotifications.isSuccess}
+              />
             </div>
             <div className="space-y-3">
-              {notificationTemplates.map((tmpl, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100">
+              {notifications.map((tmpl, idx) => (
+                <div key={tmpl.name} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100">
                   <label className="relative inline-flex cursor-pointer">
                     <input
                       type="checkbox"
                       role="switch"
                       aria-checked={tmpl.active}
-                      defaultChecked={tmpl.active}
+                      checked={tmpl.active}
+                      onChange={() => toggleNotification(idx)}
                       className="sr-only peer"
                       aria-label={`Toggle ${tmpl.name}`}
                     />
@@ -253,44 +416,86 @@ export default function Settings() {
           <Card padding="lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Working Hours & Capacity</h3>
-              <Button icon={<Save className="w-4 h-4" />}>Save</Button>
+              <SaveButton
+                onClick={() => saveHours.mutate({ key: 'workingHours', value: hours })}
+                isPending={saveHours.isPending}
+                isSuccess={saveHours.isSuccess}
+              />
             </div>
             <div className="grid grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Start Time</label>
-                <input type="text" defaultValue={workingHours.start} aria-label="Start time" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="text"
+                  value={hours.start}
+                  onChange={(e) => setHours((prev) => ({ ...prev, start: e.target.value }))}
+                  aria-label="Start time"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">End Time</label>
-                <input type="text" defaultValue={workingHours.end} aria-label="End time" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="text"
+                  value={hours.end}
+                  onChange={(e) => setHours((prev) => ({ ...prev, end: e.target.value }))}
+                  aria-label="End time"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Max Jobs Per Crew</label>
-                <input type="number" defaultValue={workingHours.maxJobsPerCrew} aria-label="Max jobs per crew" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="number"
+                  value={hours.maxJobsPerCrew}
+                  onChange={(e) => setHours((prev) => ({ ...prev, maxJobsPerCrew: Number(e.target.value) }))}
+                  aria-label="Max jobs per crew"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Max Crews Per Day</label>
-                <input type="number" defaultValue={workingHours.maxCrewsPerDay} aria-label="Max crews per day" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="number"
+                  value={hours.maxCrewsPerDay}
+                  onChange={(e) => setHours((prev) => ({ ...prev, maxCrewsPerDay: Number(e.target.value) }))}
+                  aria-label="Max crews per day"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Break Duration</label>
-                <input type="text" defaultValue={workingHours.breakDuration} aria-label="Break duration" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="text"
+                  value={hours.breakDuration}
+                  onChange={(e) => setHours((prev) => ({ ...prev, breakDuration: e.target.value }))}
+                  aria-label="Break duration"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Travel Buffer</label>
-                <input type="text" defaultValue={workingHours.travelBuffer} aria-label="Travel buffer" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+                <input
+                  type="text"
+                  value={hours.travelBuffer}
+                  onChange={(e) => setHours((prev) => ({ ...prev, travelBuffer: e.target.value }))}
+                  aria-label="Travel buffer"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Working Days</label>
               <div className="flex flex-wrap gap-2">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                  const active = workingHours.days.includes(day);
+                {ALL_DAYS.map((day) => {
+                  const active = hours.days.includes(day);
                   return (
                     <button
                       key={day}
+                      onClick={() => toggleWorkingDay(day)}
                       aria-label={`${day} ${active ? 'active' : 'inactive'}`}
+                      aria-pressed={active}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                         active ? 'bg-primary text-white' : 'bg-slate-50 text-slate-400 border border-slate-200'
                       }`}

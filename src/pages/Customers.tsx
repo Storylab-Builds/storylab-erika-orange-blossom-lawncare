@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Plus, Filter, MapPin, Phone, Mail, ChevronRight } from 'lucide-react';
-import { useCustomers } from '@/hooks';
-import { getStatusColor } from '@/lib/utils';
+import { useCustomers, useCreateCustomer } from '@/hooks';
 import type { Customer } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 
 function getStatusBadgeVariant(status: Customer['status']): 'success' | 'neutral' | 'warning' {
   switch (status) {
@@ -19,9 +21,33 @@ function getStatusBadgeVariant(status: Customer['status']): 'success' | 'neutral
   }
 }
 
+interface NewCustomerForm {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  status: Customer['status'];
+}
+
+const EMPTY_FORM: NewCustomerForm = {
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: '',
+  status: 'active',
+};
+
 export default function Customers() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState<NewCustomerForm>(EMPTY_FORM);
 
   const statusFilterValue = statusFilter === 'all' ? undefined : statusFilter as Customer['status'];
 
@@ -29,6 +55,41 @@ export default function Customers() {
     search,
     status: statusFilterValue,
   });
+
+  const createCustomer = useCreateCustomer();
+
+  function openAddModal() {
+    setForm(EMPTY_FORM);
+    createCustomer.reset();
+    setShowAddModal(true);
+  }
+
+  function updateField<K extends keyof NewCustomerForm>(key: K, value: NewCustomerForm[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    createCustomer.mutate(
+      {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        zip: form.zip.trim(),
+        status: form.status,
+      },
+      {
+        onSuccess: () => {
+          setShowAddModal(false);
+          setForm(EMPTY_FORM);
+        },
+      },
+    );
+  }
 
   if (isLoading) {
     return <LoadingSpinner fullPage label="Loading customers..." />;
@@ -52,7 +113,7 @@ export default function Customers() {
         <div>
           <p className="text-sm text-slate-500">{filtered.length} total customers</p>
         </div>
-        <Button icon={<Plus className="w-4 h-4" />}>
+        <Button icon={<Plus className="w-4 h-4" />} onClick={openAddModal}>
           Add Customer
         </Button>
       </div>
@@ -149,6 +210,94 @@ export default function Customers() {
           })}
         </div>
       )}
+
+      {/* Add Customer Modal */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add Customer" size="md">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <Input
+            label="Name"
+            value={form.name}
+            onChange={(e) => updateField('name', e.target.value)}
+            placeholder="Customer full name"
+            required
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={(e) => updateField('email', e.target.value)}
+              placeholder="name@example.com"
+            />
+            <Input
+              label="Phone"
+              type="tel"
+              value={form.phone}
+              onChange={(e) => updateField('phone', e.target.value)}
+              placeholder="(555) 123-4567"
+            />
+          </div>
+          <Input
+            label="Address"
+            value={form.address}
+            onChange={(e) => updateField('address', e.target.value)}
+            placeholder="123 Main St"
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="sm:col-span-2">
+              <Input
+                label="City"
+                value={form.city}
+                onChange={(e) => updateField('city', e.target.value)}
+                placeholder="City"
+              />
+            </div>
+            <Input
+              label="State"
+              value={form.state}
+              onChange={(e) => updateField('state', e.target.value)}
+              placeholder="ST"
+            />
+            <Input
+              label="Zip"
+              value={form.zip}
+              onChange={(e) => updateField('zip', e.target.value)}
+              placeholder="00000"
+            />
+          </div>
+          <Select
+            label="Status"
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'prospect', label: 'Prospect' },
+            ]}
+            value={form.status}
+            onChange={(value) => updateField('status', value as Customer['status'])}
+          />
+
+          {createCustomer.isError && (
+            <p className="text-sm text-error">
+              {(createCustomer.error as Error)?.message ?? 'Failed to add customer. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowAddModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              loading={createCustomer.isPending}
+              disabled={!form.name.trim()}
+            >
+              Add Customer
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

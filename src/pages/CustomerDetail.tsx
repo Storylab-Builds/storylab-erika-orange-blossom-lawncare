@@ -17,11 +17,10 @@ import {
   Edit,
   Send,
 } from 'lucide-react';
-import { useCustomer } from '@/hooks';
+import { useCustomer, useSendNotification, useNotifications, useUpdateCustomer } from '@/hooks';
 import { formatCurrency, formatDate, getServiceColor, getRelativeTime } from '@/lib/utils';
 import { SERVICE_TYPES } from '@/lib/constants';
-import { notifications } from '@/data/mockData';
-import type { Customer, ServiceAgreement, Notification } from '@/types';
+import type { Customer, ServiceAgreement } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -55,13 +54,21 @@ const MESSAGE_TEMPLATES: { value: string; label: string; body: string }[] = [
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: customer, isLoading, isError } = useCustomer(id ?? null);
+  const { data: notifications } = useNotifications();
+  const sendNotification = useSendNotification();
+  const updateCustomer = useUpdateCustomer();
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageChannel, setMessageChannel] = useState<'sms' | 'email'>('sms');
   const [messageSubject, setMessageSubject] = useState('');
   const [messageBody, setMessageBody] = useState('');
   const [messageTemplate, setMessageTemplate] = useState('');
-  const [sentMessages, setSentMessages] = useState<Array<{ id: string; channel: 'sms' | 'email'; subject: string; body: string; sentAt: string }>>([]);
-  const [sending, setSending] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; email: string; status: Customer['status'] }>({
+    name: '',
+    phone: '',
+    email: '',
+    status: 'active',
+  });
 
   if (isLoading) {
     return <LoadingSpinner fullPage label="Loading customer..." />;
@@ -88,7 +95,7 @@ export default function CustomerDetail() {
       : `${property.lotSize.toLocaleString()} sqft`
     : 'N/A';
 
-  const customerNotifications = notifications.filter((n) => n.customerId === customer.id);
+  const customerNotifications = (notifications ?? []).filter((n) => n.customerId === customer.id);
 
   function handleTemplateChange(value: string) {
     setMessageTemplate(value);
@@ -107,27 +114,56 @@ export default function CustomerDetail() {
     setMessageSubject('');
     setMessageBody('');
     setMessageTemplate('');
+    sendNotification.reset();
     setShowMessageModal(true);
   }
 
   function handleSendMessage() {
-    if (!messageBody.trim()) return;
-    setSending(true);
-    // Simulate send delay
-    setTimeout(() => {
-      setSentMessages((prev) => [
-        {
-          id: `msg-${Date.now()}`,
-          channel: messageChannel,
-          subject: messageSubject,
-          body: messageBody,
-          sentAt: new Date().toISOString(),
+    if (!customer || !messageBody.trim()) return;
+    sendNotification.mutate(
+      {
+        customerId: customer.id,
+        customerName: customer.name,
+        channel: messageChannel,
+        message: messageBody,
+        type: 'reminder',
+      },
+      {
+        onSuccess: () => {
+          setShowMessageModal(false);
         },
-        ...prev,
-      ]);
-      setSending(false);
-      setShowMessageModal(false);
-    }, 800);
+      },
+    );
+  }
+
+  function openEditModal() {
+    if (!customer) return;
+    setEditForm({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      status: customer.status,
+    });
+    updateCustomer.reset();
+    setShowEditModal(true);
+  }
+
+  function handleUpdateCustomer() {
+    if (!customer || !editForm.name.trim()) return;
+    updateCustomer.mutate(
+      {
+        id: customer.id,
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email.trim(),
+        status: editForm.status,
+      },
+      {
+        onSuccess: () => {
+          setShowEditModal(false);
+        },
+      },
+    );
   }
 
   return (
@@ -157,7 +193,7 @@ export default function CustomerDetail() {
             <Button variant="primary" icon={<Send className="w-4 h-4" />} onClick={openMessageModal}>
               Send Message
             </Button>
-            <Button variant="outline" icon={<Edit className="w-4 h-4" />}>
+            <Button variant="outline" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>
               Edit
             </Button>
           </div>
@@ -288,35 +324,9 @@ export default function CustomerDetail() {
           </Button>
         </div>
 
-        {/* Manually sent messages */}
-        {sentMessages.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Sent from this session</p>
-            <div className="space-y-2">
-              {sentMessages.map((msg) => (
-                <div key={msg.id} className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.channel === 'sms' ? 'bg-success/10' : 'bg-primary/10'}`}>
-                    {msg.channel === 'sms' ? <Phone className="w-4 h-4 text-success" /> : <Mail className="w-4 h-4 text-primary" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 uppercase font-medium">{msg.channel}</span>
-                      {msg.subject && <span className="text-sm font-medium text-slate-700">{msg.subject}</span>}
-                      <Badge variant="success">sent</Badge>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-0.5">{msg.body}</p>
-                  </div>
-                  <span className="text-xs text-slate-400 shrink-0">{getRelativeTime(msg.sentAt)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Existing notification history */}
+        {/* Notification history (persisted) */}
         {customerNotifications.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Automated notifications</p>
             {customerNotifications.map((n) => (
               <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${n.channel === 'sms' ? 'bg-success/10' : 'bg-primary/10'}`}>
@@ -338,9 +348,9 @@ export default function CustomerDetail() {
               </div>
             ))}
           </div>
-        ) : sentMessages.length === 0 ? (
+        ) : (
           <p className="text-sm text-slate-400 text-center py-4">No communications yet. Send the first message to this customer.</p>
-        ) : null}
+        )}
       </Card>
 
       {/* Send Message Modal */}
@@ -420,6 +430,12 @@ export default function CustomerDetail() {
             )}
           </div>
 
+          {sendNotification.isError && (
+            <p className="text-sm text-error">
+              {(sendNotification.error as Error)?.message ?? 'Failed to send message. Please try again.'}
+            </p>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button variant="ghost" onClick={() => setShowMessageModal(false)}>
@@ -429,10 +445,68 @@ export default function CustomerDetail() {
               variant="primary"
               icon={<Send className="w-4 h-4" />}
               onClick={handleSendMessage}
-              loading={sending}
+              loading={sendNotification.isPending}
               disabled={!messageBody.trim()}
             >
               Send {messageChannel === 'sms' ? 'SMS' : 'Email'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Customer" size="md">
+        <div className="space-y-4">
+          <Input
+            label="Name"
+            value={editForm.name}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+            placeholder="Customer full name"
+            required
+          />
+          <Input
+            label="Phone"
+            type="tel"
+            value={editForm.phone}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+            placeholder="(555) 123-4567"
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={editForm.email}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+            placeholder="name@example.com"
+          />
+          <Select
+            label="Status"
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'prospect', label: 'Prospect' },
+            ]}
+            value={editForm.status}
+            onChange={(value) => setEditForm((prev) => ({ ...prev, status: value as Customer['status'] }))}
+          />
+
+          {updateCustomer.isError && (
+            <p className="text-sm text-error">
+              {(updateCustomer.error as Error)?.message ?? 'Failed to update customer. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={handleUpdateCustomer}
+              loading={updateCustomer.isPending}
+              disabled={!editForm.name.trim()}
+            >
+              Save Changes
             </Button>
           </div>
         </div>
