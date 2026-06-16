@@ -71,7 +71,25 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       text: input.text,
       replyTo: input.replyTo,
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      // A revoked/invalid API key (or missing verified domain) must not break a
+      // customer-facing flow. Record the attempt as "logged" with the reason so
+      // the quote/reset still succeeds, and surface the misconfig in logs.
+      const msg = error.message || 'Resend error';
+      if (/invalid|unauthor|api key|forbidden|domain/i.test(msg)) {
+        // eslint-disable-next-line no-console
+        console.warn(`[email] Resend rejected the request (${msg}). Falling back to dev-log. Add a valid RESEND_API_KEY to deliver live.`);
+        const log = await prisma.messageLog.create({
+          data: {
+            channel: 'email', toAddress: to, fromAddress: cfg.from, subject: input.subject,
+            body: input.text || input.html, status: 'logged', provider: 'dev-log',
+            error: `not delivered: ${msg}`, relatedType: input.relatedType, relatedId: input.relatedId,
+          },
+        });
+        return { success: true, status: 'logged', provider: 'dev-log', messageLogId: log.id };
+      }
+      throw new Error(msg);
+    }
     const log = await prisma.messageLog.create({
       data: {
         channel: 'email', toAddress: to, fromAddress: cfg.from, subject: input.subject,
