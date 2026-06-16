@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import JobFormModal from '@/components/JobFormModal';
+import JobDetailModal from '@/components/JobDetailModal';
 
 const timeSlots = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
@@ -21,6 +22,7 @@ export default function Schedule() {
   // (works even before live crew data has loaded).
   const [hiddenCrews, setHiddenCrews] = useState<Set<string>>(() => new Set());
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const isCrewVisible = (crewId: string) => !hiddenCrews.has(crewId);
 
@@ -93,6 +95,12 @@ export default function Schedule() {
         isOpen={isJobModalOpen}
         onClose={() => setIsJobModalOpen(false)}
         defaultDate={format(weekStart, 'yyyy-MM-dd')}
+      />
+
+      <JobDetailModal
+        job={selectedJob}
+        isOpen={selectedJob !== null}
+        onClose={() => setSelectedJob(null)}
       />
 
       <div className="flex gap-6">
@@ -212,9 +220,11 @@ export default function Schedule() {
                           const left = ((start - timeSlots[0]) / totalHours) * 100;
                           const width = ((end - start) / totalHours) * 100;
                           return (
-                            <div
+                            <button
                               key={job.id}
-                              className="absolute top-0.5 bottom-0.5 rounded-md flex items-center px-1.5 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                              type="button"
+                              onClick={() => setSelectedJob(job)}
+                              className="absolute top-0.5 bottom-0.5 rounded-md flex items-center px-1.5 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary/60"
                               style={{
                                 left: `${Math.max(0, left)}%`,
                                 width: `${Math.max(1, width)}%`,
@@ -222,11 +232,12 @@ export default function Schedule() {
                                 opacity: job.status === 'completed' ? 0.6 : 1,
                               }}
                               title={`${SERVICE_TYPES[job.serviceType]?.label ?? job.serviceType} - ${job.customerName} (${job.propertyAddress})`}
+                              aria-label={`${SERVICE_TYPES[job.serviceType]?.label ?? job.serviceType} for ${job.customerName} at ${job.startTime}. View details.`}
                             >
                               <span className="text-[9px] text-white font-medium truncate">
                                 {job.customerName.split(' ').pop()}
                               </span>
-                            </div>
+                            </button>
                           );
                         })}
                       </div>

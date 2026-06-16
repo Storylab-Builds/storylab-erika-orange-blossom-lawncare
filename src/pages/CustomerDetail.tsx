@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Phone,
@@ -16,8 +16,16 @@ import {
   StickyNote,
   Edit,
   Send,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
-import { useCustomer, useSendNotification, useNotifications, useUpdateCustomer } from '@/hooks';
+import {
+  useCustomer,
+  useSendNotification,
+  useNotifications,
+  useUpdateCustomer,
+  useDeleteCustomer,
+} from '@/hooks';
 import { formatCurrency, formatDate, getServiceColor, getRelativeTime } from '@/lib/utils';
 import { SERVICE_TYPES } from '@/lib/constants';
 import type { Customer, ServiceAgreement } from '@/types';
@@ -53,11 +61,14 @@ const MESSAGE_TEMPLATES: { value: string; label: string; body: string }[] = [
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: customer, isLoading, isError } = useCustomer(id ?? null);
   const { data: notifications } = useNotifications();
   const sendNotification = useSendNotification();
   const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageChannel, setMessageChannel] = useState<'sms' | 'email'>('sms');
   const [messageSubject, setMessageSubject] = useState('');
   const [messageBody, setMessageBody] = useState('');
@@ -166,6 +177,21 @@ export default function CustomerDetail() {
     );
   }
 
+  function openDeleteModal() {
+    deleteCustomer.reset();
+    setShowDeleteModal(true);
+  }
+
+  function handleDeleteCustomer() {
+    if (!customer) return;
+    deleteCustomer.mutate(customer.id, {
+      onSuccess: () => {
+        setShowDeleteModal(false);
+        navigate('/customers');
+      },
+    });
+  }
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -195,6 +221,14 @@ export default function CustomerDetail() {
             </Button>
             <Button variant="outline" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>
               Edit
+            </Button>
+            <Button
+              variant="outline"
+              icon={<Trash2 className="w-4 h-4" />}
+              onClick={openDeleteModal}
+              className="border-error text-error hover:bg-error/10 active:bg-error/20"
+            >
+              Delete
             </Button>
           </div>
         </div>
@@ -507,6 +541,46 @@ export default function CustomerDetail() {
               disabled={!editForm.name.trim()}
             >
               Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Customer Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Customer" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-error" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-700 dark:text-gray-300">
+                Are you sure you want to delete{' '}
+                <span className="font-semibold text-slate-900 dark:text-white">{customer.name}</span>?
+              </p>
+              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+                This will permanently remove the customer and cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {deleteCustomer.isError && (
+            <p className="text-sm text-error">
+              {(deleteCustomer.error as Error)?.message ?? 'Failed to delete customer. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)} disabled={deleteCustomer.isPending}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              icon={<Trash2 className="w-4 h-4" />}
+              onClick={handleDeleteCustomer}
+              loading={deleteCustomer.isPending}
+            >
+              Delete Customer
             </Button>
           </div>
         </div>
