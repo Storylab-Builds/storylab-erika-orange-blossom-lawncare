@@ -72,6 +72,15 @@ router.post(
   asyncHandler(async (req, res) => {
     const body = parse(jobCreate, req.body);
     const job = await prisma.job.create({ data: body });
+    await prisma.activity.create({
+      data: {
+        type: 'reschedule',
+        description: `Job scheduled for ${job.customerName} (${job.serviceType})`,
+        timestamp: new Date().toISOString(),
+        entityId: job.id,
+        entityType: 'job',
+      },
+    });
     res.status(201).json(job);
   }),
 );
@@ -83,10 +92,22 @@ router.patch(
     const existing = await prisma.job.findUnique({ where: { id: req.params.id } });
     if (!existing) throw new ApiError(404, 'Job not found');
     const data: Record<string, unknown> = { ...body };
-    if (body.status === 'completed' && !existing.completedAt) {
+    const justCompleted = body.status === 'completed' && !existing.completedAt;
+    if (justCompleted) {
       data.completedAt = new Date().toISOString();
     }
     const job = await prisma.job.update({ where: { id: req.params.id }, data });
+    if (justCompleted) {
+      await prisma.activity.create({
+        data: {
+          type: 'job-completed',
+          description: `${job.crewName} completed ${job.serviceType} at ${job.customerName}`,
+          timestamp: new Date().toISOString(),
+          entityId: job.id,
+          entityType: 'job',
+        },
+      });
+    }
     res.json(job);
   }),
 );

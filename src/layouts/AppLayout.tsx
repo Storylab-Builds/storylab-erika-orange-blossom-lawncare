@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -21,6 +21,7 @@ import { NAV_ITEMS } from '@/lib/constants';
 import { useAuth } from '@/context/AuthContext';
 import { getInitials } from '@/lib/utils';
 import ThemeToggle from '@/components/ThemeToggle';
+import GlobalSearch from '@/components/GlobalSearch';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -59,6 +60,19 @@ export default function AppLayout() {
   const initials = getInitials(user?.name ?? 'OBS');
   const roleLabel = user ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : '';
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Cmd/Ctrl+K toggles the global search palette.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((open) => !open);
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   function handleLogout() {
     logout();
@@ -174,6 +188,7 @@ export default function AppLayout() {
           </div>
           <div className="flex items-center gap-4">
             <button
+              onClick={() => setIsSearchOpen(true)}
               className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors text-slate-500 dark:text-gray-400"
               aria-label="Search"
             >
@@ -198,6 +213,9 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Global search command palette */}
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 }

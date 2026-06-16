@@ -102,6 +102,15 @@ router.post(
       },
       include: withProps,
     });
+    await prisma.activity.create({
+      data: {
+        type: 'customer-added',
+        description: `New customer added: ${customer.name}`,
+        timestamp: new Date().toISOString(),
+        entityId: customer.id,
+        entityType: 'customer',
+      },
+    });
     res.status(201).json(customer);
   }),
 );

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarCheck,
@@ -20,6 +20,7 @@ import { formatCurrency, getRelativeTime } from '@/lib/utils';
 import type { DashboardStats, Activity } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
+import JobFormModal from '@/components/JobFormModal';
 
 function getWeatherImpactLabel(impact: DashboardStats['weatherImpact']): string {
   switch (impact) {
@@ -80,6 +81,9 @@ export default function Dashboard() {
   // Recent activities (last 8) from the API
   const recentActivities = activities ?? [];
 
+  // New Job modal (hook must be declared before any early return — Rules of Hooks)
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+
   if (statsLoading || jobsLoading) {
     return <LoadingSpinner fullPage label="Loading dashboard..." />;
   }
@@ -98,6 +102,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <JobFormModal isOpen={isJobModalOpen} onClose={() => setIsJobModalOpen(false)} />
+
       {hasStatsError && (
         <div className="flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 p-3 text-sm text-error">
           <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
@@ -138,12 +144,13 @@ export default function Dashboard() {
             >
               <Plus className="w-4 h-4" aria-hidden="true" /> New Customer
             </Link>
-            <Link
-              to="/schedule"
-              className="flex items-center gap-3 p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors text-success font-medium text-sm"
+            <button
+              type="button"
+              onClick={() => setIsJobModalOpen(true)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors text-success font-medium text-sm"
             >
               <Plus className="w-4 h-4" aria-hidden="true" /> New Job
-            </Link>
+            </button>
             <Link
               to="/schedule"
               className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-gray-700 hover:bg-slate-100 dark:hover:bg-gray-600 transition-colors text-slate-700 dark:text-gray-300 font-medium text-sm"

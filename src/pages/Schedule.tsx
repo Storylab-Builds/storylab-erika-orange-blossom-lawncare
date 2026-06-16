@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Plus } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek } from 'date-fns';
 import { useJobs, useWeather, useCrews } from '@/hooks';
 import { SERVICE_TYPES } from '@/lib/constants';
 import type { Job } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import JobFormModal from '@/components/JobFormModal';
 
 const timeSlots = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
@@ -18,6 +20,7 @@ export default function Schedule() {
   // Track crews the user has explicitly hidden; everything is visible by default
   // (works even before live crew data has loaded).
   const [hiddenCrews, setHiddenCrews] = useState<Set<string>>(() => new Set());
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
   const isCrewVisible = (crewId: string) => !hiddenCrews.has(crewId);
 
@@ -67,15 +70,30 @@ export default function Schedule() {
             <ChevronRight className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          {serviceColorEntries.map(([type, conf]) => (
-            <div key={type} className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: conf.color }} aria-hidden="true" />
-              <span className="text-slate-500 dark:text-gray-400">{conf.label}</span>
-            </div>
-          ))}
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3 text-xs">
+            {serviceColorEntries.map(([type, conf]) => (
+              <div key={type} className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: conf.color }} aria-hidden="true" />
+                <span className="text-slate-500 dark:text-gray-400">{conf.label}</span>
+              </div>
+            ))}
+          </div>
+          <Button
+            size="sm"
+            icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+            onClick={() => setIsJobModalOpen(true)}
+          >
+            New Job
+          </Button>
         </div>
       </div>
+
+      <JobFormModal
+        isOpen={isJobModalOpen}
+        onClose={() => setIsJobModalOpen(false)}
+        defaultDate={format(weekStart, 'yyyy-MM-dd')}
+      />
 
       <div className="flex gap-6">
         {/* Crew Filter Sidebar */}

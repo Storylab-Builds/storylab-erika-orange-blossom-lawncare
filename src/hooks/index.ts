@@ -1,7 +1,7 @@
 export { useLocalStorage } from './useLocalStorage';
 export { useDebounce } from './useDebounce';
 export { useWeather } from './useWeather';
-export { useJobs, useTodayJobs, useJob, useUpdateJob } from './useJobs';
+export { useJobs, useTodayJobs, useJob, useCreateJob, useUpdateJob, useDeleteJob } from './useJobs';
 export {
   useCustomers,
   useCustomer,

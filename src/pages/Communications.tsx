@@ -9,15 +9,16 @@ import {
   Eye,
   AlertCircle,
   FileText,
-  Bell,
-  Users,
-  Calendar,
+  Plus,
 } from 'lucide-react';
-import { useNotifications } from '@/hooks';
+import { useNotifications, useSendNotification, useCustomers } from '@/hooks';
 import { getRelativeTime } from '@/lib/utils';
 import type { Notification } from '@/types';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+import Select from '@/components/ui/Select';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 function getStatusIcon(status: Notification['status']): { Icon: typeof CheckCircle2; color: string } {
@@ -33,10 +34,55 @@ function getStatusIcon(status: Notification['status']): { Icon: typeof CheckCirc
 
 type TabKey = 'recent' | 'byType' | 'byStatus';
 
+interface ComposeForm {
+  customerId: string;
+  channel: 'sms' | 'email';
+  message: string;
+}
+
+const EMPTY_COMPOSE: ComposeForm = { customerId: '', channel: 'sms', message: '' };
+
 export default function Communications() {
+  // All hooks must run before any early return (Rules of Hooks).
   const [activeTab, setActiveTab] = useState<TabKey>('recent');
+  const [showCompose, setShowCompose] = useState(false);
+  const [form, setForm] = useState<ComposeForm>(EMPTY_COMPOSE);
   const { data, isLoading, isError } = useNotifications();
+  const { data: customersData } = useCustomers();
+  const sendNotification = useSendNotification();
   const notifications = data ?? [];
+  const customers = customersData ?? [];
+
+  function openCompose() {
+    setForm(EMPTY_COMPOSE);
+    sendNotification.reset();
+    setShowCompose(true);
+  }
+
+  function updateField<K extends keyof ComposeForm>(key: K, value: ComposeForm[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    const customer = customers.find((c) => c.id === form.customerId);
+    if (!customer || !form.message.trim()) return;
+    sendNotification.mutate(
+      {
+        customerId: customer.id,
+        customerName: customer.name,
+        channel: form.channel,
+        message: form.message.trim(),
+        type: 'reminder',
+      },
+      {
+        onSuccess: () => {
+          setShowCompose(false);
+          setForm(EMPTY_COMPOSE);
+        },
+      },
+    );
+  }
 
   if (isLoading) {
     return <LoadingSpinner fullPage label="Loading communications..." />;
@@ -77,6 +123,17 @@ export default function Communications() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Communications</h2>
+          <p className="text-sm text-slate-500 dark:text-gray-400">Customer notifications and message history</p>
+        </div>
+        <Button icon={<Plus className="w-4 h-4" />} onClick={openCompose}>
+          New Message
+        </Button>
+      </div>
+
       {isError && (
         <div className="flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 p-3 text-sm text-error">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -222,6 +279,65 @@ export default function Communications() {
           })}
         </div>
       )}
+
+      {/* Compose Modal */}
+      <Modal isOpen={showCompose} onClose={() => setShowCompose(false)} title="New Message" size="md">
+        <form onSubmit={handleSend} className="space-y-4">
+          <Select
+            label="Customer"
+            placeholder="Select a customer"
+            options={customers.map((c) => ({ value: c.id, label: c.name }))}
+            value={form.customerId}
+            onChange={(value) => updateField('customerId', value)}
+          />
+          <Select
+            label="Channel"
+            options={[
+              { value: 'sms', label: 'SMS' },
+              { value: 'email', label: 'Email' },
+            ]}
+            value={form.channel}
+            onChange={(value) => updateField('channel', value as ComposeForm['channel'])}
+          />
+          <div className="w-full">
+            <label
+              htmlFor="compose-message"
+              className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5"
+            >
+              Message
+            </label>
+            <textarea
+              id="compose-message"
+              rows={4}
+              value={form.message}
+              onChange={(e) => updateField('message', e.target.value)}
+              placeholder="Type your message..."
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+            />
+          </div>
+
+          {sendNotification.isError && (
+            <p className="text-sm text-error">
+              {(sendNotification.error as Error)?.message ?? 'Failed to send message. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowCompose(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              icon={<Send className="w-4 h-4" />}
+              loading={sendNotification.isPending}
+              disabled={!form.customerId || !form.message.trim()}
+            >
+              Send Message
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
