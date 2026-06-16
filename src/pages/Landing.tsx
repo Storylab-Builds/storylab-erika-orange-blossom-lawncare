@@ -174,14 +174,35 @@ function useCountUp(target: number, duration: number = 2000, startOnView: boolea
   useEffect(() => {
     if (!startOnView) {
       setHasStarted(true);
+      return;
     }
+
+    const el = ref.current;
+
+    // If the element is already within the viewport on initial load, start
+    // immediately. Otherwise the IntersectionObserver may never fire its
+    // "entered" callback for elements that are visible before observation
+    // begins, leaving the counter stuck at 0.
+    const isInViewport = () => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      return rect.top < viewportHeight && rect.bottom > 0 && rect.left < viewportWidth && rect.right > 0;
+    };
+
+    if (isInViewport()) {
+      setHasStarted(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting && !hasStarted) setHasStarted(true); },
+      ([entry]) => { if (entry.isIntersecting) setHasStarted(true); },
       { threshold: 0.3 }
     );
-    if (ref.current) observer.observe(ref.current);
+    if (el) observer.observe(el);
     return () => observer.disconnect();
-  }, [hasStarted, startOnView]);
+  }, [startOnView]);
 
   useEffect(() => {
     if (!hasStarted) return;

@@ -38,18 +38,18 @@ Status: ⬜ todo · 🔧 in progress · ✅ done · 🚫 blocked (external accou
 ## EPIC D — Data layer wiring
 - D1 ✅ Customers CRUD API + `useCustomers`/`useCustomer` (+create/update/delete mutations)
 - D2 ✅ Jobs/Schedule read API + `useJobs`/`useTodayJobs`/`useJob` (+`useUpdateJob`)
-- D3 ⬜ Crews + members: wire Crews page to API (currently Zustand-only writes)
+- D3 ✅ Crews + members wired to API — verified persists across reload (browser E2E)
 - D4 ✅ Reports/metrics server-computed deterministic + `useMetrics` (STABLE across refresh)
 - D5 ✅ Weather served from DB + `useWeather`
-- D6 ⬜ CustomerDetail send-message → POST /api/notifications
-- D7 ⬜ Settings page Save → PUT /api/settings/:key
+- D6 ✅ CustomerDetail send-message + edit → API; notifications from API
+- D7 ✅ Settings page Save → PUT /api/settings/:key (controlled inputs + saved indicator)
 - D8 ✅ Dashboard stats endpoint + `useDashboardStats` (verified in browser)
 - D9 ✅ Mock fetchers removed from all hooks (verified: dashboard uses only /api/*)
-- D10 ⬜ FieldOps clock-in/out + job-complete → API (`useUpdateJob`)
+- D10 ✅ FieldOps job start/complete → API (`useUpdateJob`); clock/break intentionally client-only (operator session)
 
 ## EPIC E — Frontend fixes from audit
 - E1 ⬜ Fix Landing hero count-up (stuck at "0+")
-- E2 ⬜ Fix Reports charts: `useMemo` data, stop re-animation/flicker (also Dashboard "Jobs This Week")
+- E2 ✅ Reports + Dashboard charts: `useMemo` data + `isAnimationActive={false}` (no more flicker)
 - E3 ⬜ Mobile-responsive `AppLayout` (hamburger + drawer)
 - E4 🔧 Dark mode: `darkMode:'class'` + toggle (login/register/404 already dark-aware)
 - E5 ⬜ Remove 8 dead components OR reconcile divergent types

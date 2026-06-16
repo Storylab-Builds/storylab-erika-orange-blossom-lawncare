@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -13,6 +14,8 @@ import {
   Search,
   Bell,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
 import { NAV_ITEMS } from '@/lib/constants';
 import { useAuth } from '@/context/AuthContext';
@@ -54,10 +57,15 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
   const initials = getInitials(user?.name ?? 'OBS');
   const roleLabel = user ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : '';
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
+  }
+
+  function closeDrawer() {
+    setIsDrawerOpen(false);
   }
 
   return (
@@ -70,14 +78,34 @@ export default function AppLayout() {
         Skip to main content
       </a>
 
+      {/* Mobile drawer backdrop */}
+      {isDrawerOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
+          aria-hidden="true"
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 ${
+          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         {/* Brand */}
         <div className="h-16 flex items-center gap-2.5 px-6 border-b border-slate-200">
           <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
             <Leaf className="w-4 h-4 text-white" />
           </div>
           <span className="font-bold text-lg text-slate-900 tracking-tight">OBS Lawncare</span>
+          <button
+            onClick={closeDrawer}
+            aria-label="Close menu"
+            className="ml-auto p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors lg:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -89,6 +117,7 @@ export default function AppLayout() {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={closeDrawer}
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive
@@ -128,10 +157,20 @@ export default function AppLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
-          <h1 className="text-xl font-semibold text-slate-900">
-            {getPageTitle(currentPath)}
-          </h1>
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={isDrawerOpen}
+              className="p-2 -ml-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600 lg:hidden"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-semibold text-slate-900 truncate">
+              {getPageTitle(currentPath)}
+            </h1>
+          </div>
           <div className="flex items-center gap-4">
             <button
               className="p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-500"
@@ -153,7 +192,7 @@ export default function AppLayout() {
         </header>
 
         {/* Page Content */}
-        <main id="main-content" className="flex-1 overflow-y-auto p-8">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-8">
           <Outlet />
         </main>
       </div>
