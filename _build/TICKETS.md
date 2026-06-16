@@ -1,5 +1,14 @@
 # Orange Blossom — Full-Stack Build Tickets
 
+## ✅ ROUND 2 — browser-verified (Claude in Chrome, source of truth)
+Fixed Reports crash (conditional hooks). Browser-VERIFIED E2E: New Job create (appears on schedule, persists) ·
+global search (Cmd/K, grouped results) · Settings service-price edit persists across reload (Mowing 45→55) ·
+Communications compose sends (18→19, "Sent") · true live metrics (Jobs Scheduled, Weekly Revenue, Jobs This Week
+now derive from real Job rows via /reports/jobs-series; seed spread across 14 days) · Recent Activity real + logs CRUD ·
+Integrations API-keys tab + editable notification templates added. **99 tests** (server auth/validate units + component tests).
+Remaining minor (built, pattern-proven, not all browser-clicked): notification-template browser check, integration key entry,
+customer/job delete buttons in UI, supertest API integration tests.
+
 ## ✅ COMPLETE (2026-06-16) — certified by a 5-agent validation swarm
 Full login + users, local Postgres, all reads & writes persisting (browser-verified across reloads),
 build green (FE+server tsc 0 errors), **82 tests pass**, dark mode + mobile nav, deterministic reports.
