@@ -102,6 +102,7 @@ export default function CustomerDetail() {
   }
 
   function openMessageModal() {
+    if (!customer) return;
     setMessageChannel(customer.preferredContact === 'email' ? 'email' : 'sms');
     setMessageSubject('');
     setMessageBody('');

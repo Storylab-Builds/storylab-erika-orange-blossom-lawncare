@@ -4,8 +4,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppLayout from './layouts/AppLayout';
 import LoadingSpinner from './components/LoadingSpinner';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Customers = lazy(() => import('./pages/Customers'));
 const CustomerDetail = lazy(() => import('./pages/CustomerDetail'));
@@ -17,31 +22,50 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Communications = lazy(() => import('./pages/Communications'));
 const Settings = lazy(() => import('./pages/Settings'));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false },
+  },
+});
 
 export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <HashRouter>
-          <Suspense fallback={<LoadingSpinner fullPage size="lg" label="Loading..." />}>
-            <Routes>
-              <Route index element={<Landing />} />
-              <Route element={<AppLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/customers/:id" element={<CustomerDetail />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path="/crews" element={<Crews />} />
-                <Route path="/field" element={<FieldOps />} />
-                <Route path="/weather" element={<Weather />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/communications" element={<Communications />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </HashRouter>
+        <AuthProvider>
+          <HashRouter>
+            <Suspense fallback={<LoadingSpinner fullPage size="lg" label="Loading…" />}>
+              <Routes>
+                {/* Public */}
+                <Route index element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+
+                {/* Authenticated console */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppLayout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/customers" element={<Customers />} />
+                    <Route path="/customers/:id" element={<CustomerDetail />} />
+                    <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/crews" element={<Crews />} />
+                    <Route path="/field" element={<FieldOps />} />
+                    <Route path="/weather" element={<Weather />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/communications" element={<Communications />} />
+                    {/* Owner/Admin only */}
+                    <Route element={<ProtectedRoute roles={['OWNER', 'ADMIN']} />}>
+                      <Route path="/settings" element={<Settings />} />
+                    </Route>
+                  </Route>
+                </Route>
+
+                {/* Catch-all */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </HashRouter>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

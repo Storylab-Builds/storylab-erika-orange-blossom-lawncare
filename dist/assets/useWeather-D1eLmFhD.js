@@ -1,1 +1,0 @@
-import{u as r}from"./useQuery-i5ZZh6fC.js";import{w as t}from"./mockData-D1jW-CK5.js";async function a(){return await new Promise(e=>setTimeout(e,400)),t}function o(){return r({queryKey:["weather"],queryFn:a,staleTime:300*1e3,refetchInterval:600*1e3})}export{o as u};

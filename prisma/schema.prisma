@@ -1,0 +1,180 @@
+// Orange Blossom Lawncare — Prisma schema (local PostgreSQL)
+// Domain fields that are string-literal unions on the frontend (serviceType,
+// status, priority, channel, role-of-employee, etc.) are stored as String and
+// validated with zod at the API boundary, so the existing frontend TS types
+// (kebab-case values like "snow-removal") stay byte-identical end-to-end.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Auth ---
+
+enum Role {
+  OWNER
+  ADMIN
+  CREW
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(ADMIN)
+  crewId       String? // optional link to a Crew for CREW-role users
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// --- Customers / Properties / Agreements ---
+
+model Customer {
+  id               String         @id @default(cuid())
+  name             String
+  email            String
+  phone            String
+  address          String
+  city             String
+  state            String
+  zip              String
+  status           String         @default("prospect") // active | inactive | prospect
+  notes            String         @default("")
+  preferredContact String         @default("email") // phone | email | sms
+  createdAt        String // ISO date kept as string to match frontend
+  properties       Property[]
+}
+
+model Property {
+  id                 String             @id @default(cuid())
+  customerId         String
+  customer           Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  address            String
+  lotSize            Int // sq ft
+  features           String[]
+  gateCode           String?
+  accessInstructions String?
+  services           ServiceAgreement[]
+}
+
+model ServiceAgreement {
+  id                  String   @id @default(cuid())
+  propertyId          String
+  property            Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  serviceType         String
+  frequency           String
+  estimatedDuration   Int // minutes
+  price               Float
+  seasonStart         String?
+  seasonEnd           String?
+  specialInstructions String?
+  status              String   @default("active") // active | paused | cancelled
+  nextScheduledDate   String?
+}
+
+// --- Crews / Employees / Equipment ---
+
+model Crew {
+  id                 String      @id @default(cuid())
+  name               String
+  specialties        String[]
+  status             String      @default("available") // available | on-job | off-duty | break
+  serviceZone        String
+  todayJobsCount     Int         @default(0)
+  todayJobsCompleted Int         @default(0)
+  efficiency         Int         @default(85)
+  members            Employee[]
+  equipment          Equipment[]
+}
+
+model Employee {
+  id          String  @id @default(cuid())
+  crewId      String
+  crew        Crew    @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  name        String
+  role        String // crew-lead | technician | driver
+  phone       String
+  clockedIn   Boolean @default(false)
+  clockInTime String?
+  onBreak     Boolean @default(false)
+}
+
+model Equipment {
+  id     String @id @default(cuid())
+  crewId String
+  crew   Crew   @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  name   String
+  type   String
+  status String @default("available")
+}
+
+// --- Jobs (denormalized to match the frontend Job type; no FKs by design) ---
+
+model Job {
+  id                 String  @id @default(cuid())
+  serviceAgreementId String?
+  customerId         String
+  customerName       String
+  propertyAddress    String
+  serviceType        String
+  scheduledDate      String
+  startTime          String
+  endTime            String
+  crewId             String?
+  crewName           String
+  status             String  @default("scheduled")
+  priority           String  @default("normal")
+  notes              String?
+  completedAt        String?
+  actualDuration     Int?
+  weatherAffected    Boolean @default(false)
+}
+
+// --- Communications / Activity ---
+
+model Notification {
+  id           String @id @default(cuid())
+  customerId   String
+  customerName String
+  type         String
+  channel      String // sms | email | push
+  message      String
+  status       String @default("pending") // pending | sent | delivered | read | failed
+  sentAt       String
+}
+
+model Activity {
+  id          String  @id @default(cuid())
+  type        String
+  description String
+  timestamp   String
+  entityId    String?
+  entityType  String?
+}
+
+// --- Reports / Weather / Settings ---
+
+model DailyMetric {
+  date                 String @id // yyyy-MM-dd
+  revenue              Int
+  jobsCompleted        Int
+  jobsScheduled        Int
+  crewUtilization      Int
+  customerSatisfaction Float
+}
+
+model WeatherSnapshot {
+  id        Int      @id @default(1)
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value Json
+}

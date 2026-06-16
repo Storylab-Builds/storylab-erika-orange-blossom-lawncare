@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -12,8 +12,11 @@ import {
   Leaf,
   Search,
   Bell,
+  LogOut,
 } from 'lucide-react';
 import { NAV_ITEMS } from '@/lib/constants';
+import { useAuth } from '@/context/AuthContext';
+import { getInitials } from '@/lib/utils';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -46,7 +49,16 @@ function getPageTitle(pathname: string): string {
 
 export default function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
+  const { user, logout } = useAuth();
+  const initials = getInitials(user?.name ?? 'OBS');
+  const roleLabel = user ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : '';
+
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -95,12 +107,20 @@ export default function AppLayout() {
         <div className="p-4 border-t border-slate-200">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
-              JD
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">Jake Davidson</p>
-              <p className="text-xs text-slate-500 truncate">Owner / Admin</p>
+              <p className="text-sm font-medium text-slate-900 truncate">{user?.name ?? 'Account'}</p>
+              <p className="text-xs text-slate-500 truncate">{roleLabel}</p>
             </div>
+            <button
+              onClick={handleLogout}
+              aria-label="Sign out"
+              title="Sign out"
+              className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -127,7 +147,7 @@ export default function AppLayout() {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full" />
             </button>
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
-              JD
+              {initials}
             </div>
           </div>
         </header>
