@@ -12,4 +12,19 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   port: Number(process.env.PORT || 4000),
   nodeEnv: process.env.NODE_ENV || 'development',
+  appBaseUrl: process.env.APP_BASE_URL || 'http://localhost:5174',
+
+  // Integration defaults. These are FALLBACKS — the live values are read at call
+  // time from the `integrations` Setting (DB) first, then these env vars. That
+  // ordering lets an admin reconfigure keys in Settings without a redeploy.
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    fromNumber: process.env.TWILIO_SMS_NUMBER || '',
+  },
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.EMAIL_FROM || 'Orange Blossom Lawncare <onboarding@resend.dev>',
+    quoteInbox: process.env.QUOTE_INBOX || 'hello@orangeblossom.com',
+  },
 };

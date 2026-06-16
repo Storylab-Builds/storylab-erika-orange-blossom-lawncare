@@ -222,8 +222,11 @@ function useCountUp(target: number, duration: number = 2000, startOnView: boolea
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', service: '', message: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const [activeProject, setActiveProject] = useState(0);
   const [selectedLotSize, setSelectedLotSize] = useState('standard');
   const [selectedEstimatorServices, setSelectedEstimatorServices] = useState<string[]>(['mowing']);
@@ -331,11 +334,40 @@ export default function Landing() {
   const yearsCount = useCountUp(8, 1500);
   const jobsCount = useCountUp(15000, 2500);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    setTimeout(() => setFormSubmitted(false), 5000);
-    setFormData({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' });
+    setSubmitError(null);
+    const name = `${formData.firstName} ${formData.lastName}`.trim();
+    if (!name || !formData.email) {
+      setSubmitError('Please enter your name and email.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/public/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email: formData.email,
+          phone: formData.phone || undefined,
+          address: formData.address || undefined,
+          serviceType: formData.service || undefined,
+          message: formData.message || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.message || data?.error || 'Something went wrong. Please try again or call us.');
+      }
+      setSuccessMessage(data.message || "Quote request received! We'll be in touch within 24 hours.");
+      setFormSubmitted(true);
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', address: '', service: '', message: '' });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -1512,7 +1544,7 @@ export default function Landing() {
                     <CheckCircle2 className="w-8 h-8 text-green-400" />
                   </div>
                   <h4 className="text-lg font-bold text-white mb-2">Quote Request Received!</h4>
-                  <p className="text-slate-300 text-sm">We'll review your property and send a detailed quote within 24 hours. Check your email for confirmation.</p>
+                  <p className="text-slate-300 text-sm">{successMessage || "We'll review your property and send a detailed quote within 24 hours. Check your email for confirmation."}</p>
                 </div>
               ) : (
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
@@ -1550,6 +1582,13 @@ export default function Landing() {
                     required
                     className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   />
+                  <input
+                    type="text"
+                    placeholder="Property Address (optional)"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  />
                   <select
                     className={`w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${formData.service ? 'text-white' : 'text-slate-400'}`}
                     value={formData.service}
@@ -1572,12 +1611,18 @@ export default function Landing() {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
                   />
+                  {submitError && (
+                    <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+                      {submitError}
+                    </div>
+                  )}
                   <button
                     type="submit"
-                    className="w-full py-3.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                    disabled={submitting}
+                    className="w-full py-3.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    Send My Free Quote Request
-                    <ArrowRight className="w-4 h-4" />
+                    {submitting ? 'Sending…' : 'Send My Free Quote Request'}
+                    {!submitting && <ArrowRight className="w-4 h-4" />}
                   </button>
                   <p className="text-xs text-slate-500 text-center">No spam, no obligation. We typically respond within 2 hours.</p>
                 </form>

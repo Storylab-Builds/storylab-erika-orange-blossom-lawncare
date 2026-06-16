@@ -178,3 +178,48 @@ model Setting {
   key   String @id
   value Json
 }
+
+// --- Integrations: outbound message audit log (SMS via Twilio, email via Resend) ---
+
+model MessageLog {
+  id          String   @id @default(cuid())
+  channel     String // sms | email
+  direction   String   @default("outbound") // outbound | inbound
+  toAddress   String // phone (E.164) or email
+  fromAddress String
+  subject     String? // email only
+  body        String
+  status      String   @default("queued") // queued | sent | delivered | failed | logged
+  provider    String? // twilio | resend | dev-log
+  providerId  String? // Twilio SID / Resend id
+  error       String?
+  relatedType String? // customer | job | quote | notification | test
+  relatedId   String?
+  createdAt   DateTime @default(now())
+}
+
+// --- Multi-tenant auth: password reset ---
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// --- Public marketing site: "Get a Free Quote" lead capture ---
+
+model QuoteRequest {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  address     String?
+  serviceType String?
+  message     String?
+  status      String   @default("new") // new | contacted | quoted | won | lost
+  emailLogId  String? // link to the MessageLog row for the notification email
+  createdAt   DateTime @default(now())
+}

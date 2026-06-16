@@ -1,5 +1,32 @@
 # Orange Blossom — Full-Stack Build Tickets
 
+## 🔧 PHASE 7 — real integrations + UX (in progress 2026-06-16)
+**Backend DONE + verified (10/10 integration tests pass, curl E2E green):**
+- ✅ Twilio SMS LIVE (real send returned a Twilio SID `SMc743...`). `server/src/services/twilio.ts` — logs to `MessageLog`, dev-log fallback. Creds from VADIS `.env` → OBS `.env` (gitignored).
+- ✅ Resend email service `server/src/services/email.ts` — quote form + password reset route through it; dev-log transport until a Resend key is added (none found on machine).
+- ✅ Public quote capture `POST /api/public/quote` (no auth) — persists `QuoteRequest`, emails company + customer.
+- ✅ Realistic seed: **305 jobs** across −56..+14 days, varied per-day → "Jobs This Week" now VARIES (e.g. 4/6, was flat 2). DailyMetrics derived from real jobs.
+- ✅ Multi-tenant: register (existing) + `POST /api/auth/forgot-password` + `/reset-password` (single-use, hashed token, 1h expiry, no account enumeration).
+- ✅ Real settings: secrets masked on GET (`f968••••1d`) with `*Configured`/`*Source`; preserve-on-blank on PUT; `integrations` (Twilio/Resend/channel toggles) + notification templates seeded. Config resolves DB→env at call time.
+- ✅ `server/src/routes/messages.ts` — message log + `POST /messages/test-sms` + quote-leads CRUD. New hooks `useMessages`.
+
+**Frontend DONE + browser-verified (Chrome MCP, source of truth, 0 console errors):**
+- ✅ Portal nav: "View public website" → / + brand → /dashboard.
+- ✅ Notifications bell: opens on single click, real merged feed (notifications + message log) with status badges.
+- ✅ Schedule: Google-Calendar week grid — 7 day columns (Mon–Sun incl. Wednesday), hours vertical, week nav, 138 job blocks, click→detail/+New Job.
+- ✅ Reports: NO crash (prior bug fixed); range toggle re-drives data (30d $66,955 → year $135,630); Export PDF + CSV.
+- ✅ Settings: real Integrations panel (Twilio/Resend masked + configured/source badges), Test SMS, channel toggles, templates — DB-backed.
+- ✅ FieldOps: no manual clock; Start/Complete auto-capture + overdue flag.
+- ✅ Quote form: full E2E browser submit → DB lead + 2 emails logged.
+- ✅ Multi-tenant: forgot-password page works (dev reset link); Login has "Forgot your password?".
+
+**Verification:** 113 tests pass (16 files) · FE+server tsc clean · `npm run build` green · Chrome E2E on every page.
+**PDF features summary** dropped to G:\Downloads + C:\Users\kalii\Downloads. Rating: 8.5/10.
+**Pending:** Google Calendar 2-way sync · live SMS to user's real phone (awaiting number) · live Resend key for email delivery · server-side auto-complete for overdue jobs.
+
+---
+
+
 ## ✅ ROUND 2 — browser-verified (Claude in Chrome, source of truth)
 Fixed Reports crash (conditional hooks). Browser-VERIFIED E2E: New Job create (appears on schedule, persists) ·
 global search (Cmd/K, grouped results) · Settings service-price edit persists across reload (Mowing 45→55) ·

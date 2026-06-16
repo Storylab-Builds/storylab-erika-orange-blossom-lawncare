@@ -1,11 +1,10 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
-import { format, subDays } from 'date-fns';
+import { format, subDays, addDays } from 'date-fns';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import {
   customers,
   crews,
-  todayJobs,
   weatherData,
   notifications,
   activities,
@@ -28,6 +27,9 @@ async function main() {
     prisma.dailyMetric.deleteMany(),
     prisma.weatherSnapshot.deleteMany(),
     prisma.setting.deleteMany(),
+    prisma.messageLog.deleteMany(),
+    prisma.passwordResetToken.deleteMany(),
+    prisma.quoteRequest.deleteMany(),
     prisma.user.deleteMany(),
   ]);
 
@@ -120,38 +122,153 @@ async function main() {
     });
   }
 
-  // --- Jobs (denormalized) ---
-  // Spread jobs across the last 14 days so the weekly charts are populated.
-  // ~1/3 stay on dayOffset 0 (today) to keep the dashboard "today" view full.
-  // Jobs in the past (dayOffset > 0) are marked completed on that same day.
-  for (let i = 0; i < todayJobs.length; i++) {
-    const j = todayJobs[i];
-    const dayOffset = i % 14;
-    const day = subDays(new Date(), dayOffset);
-    const scheduledDate = format(day, 'yyyy-MM-dd');
-    const isPast = dayOffset > 0;
-    const status = isPast ? 'completed' : j.status;
-    const completedAt = isPast ? `${scheduledDate}T12:00:00` : j.completedAt;
+  // --- Jobs (denormalized, REALISTIC distribution) ---
+  // Generated deterministically across a window of 56 days back -> 14 days forward,
+  // tied to real customers/properties/service-agreements and crews. Per-day counts
+  // vary by weekday + a gentle wave so "jobs this week" is never a flat line.
+  // DailyMetrics below are DERIVED from these same jobs so dashboard/reports agree.
 
-    await prisma.job.create({
-      data: {
-        id: j.id,
-        serviceAgreementId: j.serviceAgreementId,
-        customerId: j.customerId,
-        customerName: j.customerName,
-        propertyAddress: j.propertyAddress,
-        serviceType: j.serviceType,
+  // Deterministic pseudo-random in [0,1) from an integer seed (no Math.random).
+  const rand = (seed: number): number => {
+    const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  // Flatten customers -> a pool of (customer, property, service) work items.
+  type WorkItem = {
+    serviceAgreementId: string;
+    customerId: string;
+    customerName: string;
+    propertyAddress: string;
+    serviceType: string;
+    estimatedDuration: number;
+  };
+  const pool: WorkItem[] = [];
+  for (const c of customers) {
+    for (const p of c.properties ?? []) {
+      for (const s of p.services ?? []) {
+        pool.push({
+          serviceAgreementId: s.id,
+          customerId: c.id,
+          customerName: c.name,
+          propertyAddress: p.address,
+          serviceType: s.serviceType,
+          estimatedDuration: s.estimatedDuration,
+        });
+      }
+    }
+  }
+
+  const crewList = crews.map((c) => ({ id: c.id, name: c.name }));
+  const slots = [
+    ['07:00', '08:30'], ['08:45', '10:15'], ['10:30', '12:00'],
+    ['13:00', '14:30'], ['14:45', '16:15'], ['16:30', '18:00'],
+  ];
+  const priorities = ['normal', 'normal', 'normal', 'high', 'low'];
+
+  // Per-day metric accumulators (date -> derived metric).
+  const metricByDate = new Map<
+    string,
+    { revenue: number; jobsCompleted: number; jobsScheduled: number }
+  >();
+
+  const PRICE_BY_TYPE: Record<string, number> = {};
+  for (const c of customers)
+    for (const p of c.properties ?? [])
+      for (const s of p.services ?? []) PRICE_BY_TYPE[s.serviceType] = s.price;
+
+  const jobRows: Prisma.JobCreateManyInput[] = [];
+  let poolCursor = 0;
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
+  for (let offset = 56; offset >= -14; offset--) {
+    const day = offset >= 0 ? subDays(new Date(), offset) : addDays(new Date(), -offset);
+    const scheduledDate = format(day, 'yyyy-MM-dd');
+    const dow = day.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isFuture = scheduledDate > todayStr;
+    const isToday = scheduledDate === todayStr;
+
+    // Varied per-day count: weekday base 5-8, weekend 0-2, plus a wave.
+    const wave = Math.round(2 * Math.sin(offset / 2.3));
+    const base = isWeekend ? 1 : 6;
+    const jitter = Math.floor(rand(offset + 7) * 3); // 0..2
+    let count = Math.max(0, base + wave + jitter - (isWeekend ? 1 : 0));
+    if (isWeekend && rand(offset) < 0.4) count = 0; // some weekends are off entirely
+    count = Math.min(count, slots.length);
+
+    let dayRevenue = 0;
+    let dayCompleted = 0;
+
+    for (let k = 0; k < count; k++) {
+      const item = pool[poolCursor % pool.length];
+      poolCursor++;
+      const crew = crewList[(offset + k) % crewList.length];
+      const [startTime, endTime] = slots[k % slots.length];
+      const price = PRICE_BY_TYPE[item.serviceType] ?? 75;
+
+      // Status by date: past = completed (a few weather-affected); today = mix; future = scheduled.
+      let status = 'scheduled';
+      let completedAt: string | null = null;
+      let actualDuration: number | null = null;
+      const weatherAffected = !isFuture && rand(offset * 31 + k) < 0.07;
+      if (!isFuture && !isToday) {
+        status = 'completed';
+        completedAt = `${scheduledDate}T${endTime}:00`;
+        actualDuration = item.estimatedDuration + Math.round((rand(offset * 13 + k) - 0.5) * 20);
+      } else if (isToday) {
+        if (k === 0) status = 'in-progress';
+        else if (k < 2) {
+          status = 'completed';
+          completedAt = `${scheduledDate}T${endTime}:00`;
+          actualDuration = item.estimatedDuration;
+        } else status = 'scheduled';
+      }
+
+      if (status === 'completed') {
+        dayRevenue += price;
+        dayCompleted++;
+      }
+
+      jobRows.push({
+        id: `job-${scheduledDate}-${k}`,
+        serviceAgreementId: item.serviceAgreementId,
+        customerId: item.customerId,
+        customerName: item.customerName,
+        propertyAddress: item.propertyAddress,
+        serviceType: item.serviceType,
         scheduledDate,
-        startTime: j.startTime,
-        endTime: j.endTime,
-        crewId: j.crewId,
-        crewName: j.crewName,
+        startTime,
+        endTime,
+        crewId: crew?.id ?? null,
+        crewName: crew?.name ?? 'Unassigned',
         status,
-        priority: j.priority,
-        notes: j.notes,
+        priority: priorities[(offset + k) % priorities.length],
+        notes: null,
         completedAt,
-        actualDuration: j.actualDuration,
-        weatherAffected: j.weatherAffected ?? false,
+        actualDuration,
+        weatherAffected,
+      });
+    }
+
+    metricByDate.set(scheduledDate, {
+      revenue: dayRevenue,
+      jobsCompleted: dayCompleted,
+      jobsScheduled: count,
+    });
+  }
+
+  await prisma.job.createMany({ data: jobRows });
+
+  // Set each crew's today counts from the generated "today" jobs.
+  const todaysJobs = jobRows.filter((j) => j.scheduledDate === todayStr);
+  for (const crew of crews) {
+    const mine = todaysJobs.filter((j) => j.crewId === crew.id);
+    await prisma.crew.update({
+      where: { id: crew.id },
+      data: {
+        todayJobsCount: mine.length,
+        todayJobsCompleted: mine.filter((j) => j.status === 'completed').length,
       },
     });
   }
@@ -186,23 +303,26 @@ async function main() {
     });
   }
 
-  // --- Daily metrics: DETERMINISTIC (no Math.random) ---
+  // --- Daily metrics: DERIVED from the generated jobs (dashboard/reports agree) ---
+  // Covers the last 90 days; days with jobs use real counts, gaps fall back to a
+  // deterministic estimate so charts have a continuous axis.
   const metrics: Prisma.DailyMetricCreateManyInput[] = [];
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 89; i >= 0; i--) {
     const d = subDays(new Date(), i);
     const date = format(d, 'yyyy-MM-dd');
     const dow = d.getDay();
     const isWeekend = dow === 0 || dow === 6;
-    const wave = Math.round(3 * Math.sin(i / 3)); // deterministic gentle variation
-    const jobsScheduled = isWeekend ? 9 : 23;
-    const jobsCompleted = Math.min(jobsScheduled, Math.max(4, jobsScheduled - 2 + (wave % 2)));
-    const revenue = jobsCompleted * 95 + (isWeekend ? 0 : 250) + wave * 30;
+    const derived = metricByDate.get(date);
+    const jobsScheduled = derived?.jobsScheduled ?? (isWeekend ? 1 : 5);
+    const jobsCompleted = derived?.jobsCompleted ?? Math.max(0, jobsScheduled - 1);
+    const revenue = derived?.revenue ?? jobsCompleted * 90;
+    const utilBase = jobsScheduled === 0 ? 0 : Math.min(98, 60 + jobsCompleted * 6);
     metrics.push({
       date,
       revenue,
       jobsCompleted,
       jobsScheduled,
-      crewUtilization: isWeekend ? 72 : 88 + (wave % 3),
+      crewUtilization: utilBase,
       customerSatisfaction: Number((4.5 + (i % 5) * 0.08).toFixed(1)),
     });
   }
@@ -230,6 +350,36 @@ async function main() {
         key: 'workingHours',
         value: { start: '07:00', end: '18:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
       },
+      {
+        key: 'notifications',
+        value: {
+          templates: {
+            'appointment-reminder': 'Hi {{name}}, this is a reminder that {{crew}} will service {{address}} on {{date}}.',
+            'on-the-way': 'Hi {{name}}, your Orange Blossom crew is on the way and will arrive shortly.',
+            'job-complete': 'Hi {{name}}, your lawn service at {{address}} is complete. Thanks for choosing Orange Blossom!',
+          },
+        },
+      },
+      {
+        // Integration credentials. Secrets resolve from here first, then .env.
+        // Stored blank by default — real values live in .env for local dev and
+        // can be entered/overridden in Settings -> Integrations.
+        key: 'integrations',
+        value: {
+          twilio: { accountSid: '', authToken: '', fromNumber: '', enabled: true },
+          resend: { apiKey: '', from: 'Orange Blossom Lawncare <onboarding@resend.dev>', quoteInbox: 'hello@orangeblossom.com', enabled: true },
+          notifications: { smsEnabled: true, emailEnabled: true },
+        },
+      },
+    ],
+  });
+
+  // --- Sample quote-request leads (from the public marketing form) ---
+  await prisma.quoteRequest.createMany({
+    data: [
+      { name: 'Brenda Coyle', email: 'brenda.coyle@example.com', phone: '+13305550148', address: '88 Maple Grove Ln, Hudson, OH', serviceType: 'lawn-mowing', message: 'Weekly mowing for a half-acre lot.', status: 'new' },
+      { name: 'Tom Reilly', email: 'tom.reilly@example.com', phone: '+13305550172', address: '14 Birch St, Stow, OH', serviceType: 'landscaping', message: 'Spring cleanup and mulch.', status: 'contacted' },
+      { name: 'Priya Nadar', email: 'priya.nadar@example.com', phone: '+13305550193', address: '410 Oakwood Dr, Kent, OH', serviceType: 'fertilization', message: 'Quote for a seasonal fertilization plan.', status: 'quoted' },
     ],
   });
 
@@ -237,10 +387,11 @@ async function main() {
     users: 3,
     customers: customers.length,
     crews: crews.length,
-    jobs: todayJobs.length,
+    jobs: jobRows.length,
     notifications: notifications.length,
     activities: activities.length,
     metrics: metrics.length,
+    quotes: 3,
   });
 }
 

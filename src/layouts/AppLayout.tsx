@@ -16,12 +16,14 @@ import {
   LogOut,
   Menu,
   X,
+  Globe,
 } from 'lucide-react';
 import { NAV_ITEMS } from '@/lib/constants';
 import { useAuth } from '@/context/AuthContext';
 import { getInitials } from '@/lib/utils';
 import ThemeToggle from '@/components/ThemeToggle';
 import GlobalSearch from '@/components/GlobalSearch';
+import NotificationsPanel from '@/components/NotificationsPanel';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
@@ -61,6 +63,8 @@ export default function AppLayout() {
   const roleLabel = user ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : '';
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [unreadCleared, setUnreadCleared] = useState(false);
 
   // Cmd/Ctrl+K toggles the global search palette.
   useEffect(() => {
@@ -113,7 +117,13 @@ export default function AppLayout() {
           <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
             <Leaf className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">OBS Lawncare</span>
+          <Link
+            to="/dashboard"
+            onClick={closeDrawer}
+            className="font-bold text-lg text-slate-900 dark:text-white tracking-tight hover:text-primary dark:hover:text-primary-light transition-colors"
+          >
+            OBS Lawncare
+          </Link>
           <button
             onClick={closeDrawer}
             aria-label="Close menu"
@@ -187,6 +197,15 @@ export default function AppLayout() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors text-slate-500 dark:text-gray-400"
+              aria-label="View public website"
+              title="View website"
+            >
+              <Globe className="w-5 h-5" />
+              <span className="hidden md:inline text-sm font-medium">View website</span>
+            </Link>
             <button
               onClick={() => setIsSearchOpen(true)}
               className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors text-slate-500 dark:text-gray-400"
@@ -194,13 +213,28 @@ export default function AppLayout() {
             >
               <Search className="w-5 h-5" />
             </button>
-            <button
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors text-slate-500 dark:text-gray-400 relative"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsNotifOpen((open) => !open)}
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors text-slate-500 dark:text-gray-400 relative"
+                aria-label="Notifications"
+                aria-expanded={isNotifOpen}
+                aria-haspopup="dialog"
+              >
+                <Bell className="w-5 h-5" />
+                {!unreadCleared && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full" />
+                )}
+              </button>
+              <NotificationsPanel
+                isOpen={isNotifOpen}
+                onClose={() => setIsNotifOpen(false)}
+                onMarkAllRead={() => {
+                  setUnreadCleared(true);
+                  setIsNotifOpen(false);
+                }}
+              />
+            </div>
             <ThemeToggle />
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">
               {initials}
