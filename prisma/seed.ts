@@ -121,7 +121,18 @@ async function main() {
   }
 
   // --- Jobs (denormalized) ---
-  for (const j of todayJobs) {
+  // Spread jobs across the last 14 days so the weekly charts are populated.
+  // ~1/3 stay on dayOffset 0 (today) to keep the dashboard "today" view full.
+  // Jobs in the past (dayOffset > 0) are marked completed on that same day.
+  for (let i = 0; i < todayJobs.length; i++) {
+    const j = todayJobs[i];
+    const dayOffset = i % 14;
+    const day = subDays(new Date(), dayOffset);
+    const scheduledDate = format(day, 'yyyy-MM-dd');
+    const isPast = dayOffset > 0;
+    const status = isPast ? 'completed' : j.status;
+    const completedAt = isPast ? `${scheduledDate}T12:00:00` : j.completedAt;
+
     await prisma.job.create({
       data: {
         id: j.id,
@@ -130,15 +141,15 @@ async function main() {
         customerName: j.customerName,
         propertyAddress: j.propertyAddress,
         serviceType: j.serviceType,
-        scheduledDate: j.scheduledDate,
+        scheduledDate,
         startTime: j.startTime,
         endTime: j.endTime,
         crewId: j.crewId,
         crewName: j.crewName,
-        status: j.status,
+        status,
         priority: j.priority,
         notes: j.notes,
-        completedAt: j.completedAt,
+        completedAt,
         actualDuration: j.actualDuration,
         weatherAffected: j.weatherAffected ?? false,
       },

@@ -9,7 +9,7 @@ import {
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { useDailyMetrics, useRevenueData, useCrewUtilization, useCustomers } from '@/hooks';
+import { useDailyMetrics, useRevenueData, useCrewUtilization, useCustomers, useJobsSeries } from '@/hooks';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
@@ -20,6 +20,7 @@ export default function Reports() {
   const { totalRevenue, avgDailyRevenue, data: revenueData, isLoading: revenueLoading } = useRevenueData(30);
   const { data: crewUtilData, isLoading: crewLoading } = useCrewUtilization();
   const { data: customers } = useCustomers();
+  const { data: jobsSeries } = useJobsSeries(30);
 
   // Chart data — these useMemo hooks MUST run before any early return (Rules of Hooks).
   const revenueChartData = useMemo(
@@ -33,20 +34,20 @@ export default function Reports() {
 
   const weeklyJobsData = useMemo(() => {
     const out: { week: string; completed: number; scheduled: number }[] = [];
-    if (metrics) {
-      for (let i = 0; i < metrics.length; i += 7) {
-        const weekSlice = metrics.slice(i, i + 7);
+    if (jobsSeries) {
+      for (let i = 0; i < jobsSeries.length; i += 7) {
+        const weekSlice = jobsSeries.slice(i, i + 7);
         if (weekSlice.length > 0) {
           out.push({
             week: formatDate(weekSlice[0].date).replace(/, \d{4}$/, ''),
-            completed: weekSlice.reduce((s, m) => s + m.jobsCompleted, 0),
-            scheduled: weekSlice.reduce((s, m) => s + m.jobsScheduled, 0),
+            completed: weekSlice.reduce((s, d) => s + d.completed, 0),
+            scheduled: weekSlice.reduce((s, d) => s + d.scheduled, 0),
           });
         }
       }
     }
     return out;
-  }, [metrics]);
+  }, [jobsSeries]);
 
   if (metricsLoading || revenueLoading) {
     return <LoadingSpinner fullPage label="Loading reports..." />;

@@ -14,7 +14,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { useDashboardStats, useDailyMetrics } from '@/hooks';
+import { useDashboardStats, useJobsSeries } from '@/hooks';
 import { useTodayJobs, useWeather, useActivities, useCrews } from '@/hooks';
 import { formatCurrency, getRelativeTime } from '@/lib/utils';
 import type { DashboardStats, Activity } from '@/types';
@@ -49,7 +49,7 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading, isError: statsError } = useDashboardStats();
   const { data: todayJobs, isLoading: jobsLoading, isError: jobsError } = useTodayJobs();
   const { data: weather, isLoading: weatherLoading } = useWeather();
-  const { data: metrics } = useDailyMetrics(7);
+  const { data: jobsSeries } = useJobsSeries(7);
   const { data: activities, isError: activitiesError } = useActivities(8);
   const { data: crews } = useCrews();
 
@@ -68,14 +68,14 @@ export default function Dashboard() {
     return groups;
   }, [todayJobs]);
 
-  // Weekly jobs chart from metrics
+  // Weekly jobs chart from real jobs time-series
   const weeklyJobsChart = useMemo(
     () =>
-      (metrics ?? []).map((m) => ({
-        name: new Date(m.date).toLocaleDateString('en-US', { weekday: 'short' }),
-        jobs: m.jobsCompleted,
+      (jobsSeries ?? []).map((d) => ({
+        name: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        jobs: d.scheduled,
       })),
-    [metrics]
+    [jobsSeries]
   );
 
   // Recent activities (last 8) from the API

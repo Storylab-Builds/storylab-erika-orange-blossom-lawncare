@@ -21,4 +21,4 @@ export {
 export { useSettings, useSaveSetting } from './useSettings';
 export { useNotifications, useSendNotification } from './useNotifications';
 export { useActivities } from './useActivities';
-export { useDashboardStats, useDailyMetrics, useRevenueData, useCrewUtilization } from './useMetrics';
+export { useDashboardStats, useDailyMetrics, useRevenueData, useCrewUtilization, useJobsSeries } from './useMetrics';

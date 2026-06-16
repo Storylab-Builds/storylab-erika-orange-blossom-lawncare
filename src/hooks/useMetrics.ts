@@ -18,6 +18,20 @@ export function useDailyMetrics(days = 30) {
   });
 }
 
+export interface JobsSeriesPoint {
+  date: string;
+  scheduled: number;
+  completed: number;
+}
+
+export function useJobsSeries(days = 30) {
+  return useQuery<JobsSeriesPoint[]>({
+    queryKey: ['jobs-series', days],
+    queryFn: () => api.get<JobsSeriesPoint[]>(`/reports/jobs-series?days=${days}`),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useRevenueData(days = 30) {
   const { data: metrics, ...rest } = useDailyMetrics(days);
 
