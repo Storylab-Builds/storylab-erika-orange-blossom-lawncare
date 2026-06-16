@@ -37,17 +37,17 @@ export default function WeatherWidget({ className }: WeatherWidgetProps) {
     <Card className={className}>
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-sm text-gray-500 mb-0.5">Akron, OH</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">Akron, OH</p>
           <div className="flex items-center gap-3">
             <Sun className="w-10 h-10 text-amber-400" />
-            <span className="text-4xl font-bold text-slate-900">74&deg;</span>
+            <span className="text-4xl font-bold text-slate-900 dark:text-white">74&deg;</span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">Mostly Sunny</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Mostly Sunny</p>
         </div>
-        <div className="text-right text-sm text-gray-500 space-y-1">
+        <div className="text-right text-sm text-gray-500 dark:text-gray-400 space-y-1">
           <div className="flex items-center gap-1 justify-end">
             <span>H: 78&deg;</span>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300 dark:text-gray-600">|</span>
             <span>L: 56&deg;</span>
           </div>
           <div className="flex items-center gap-1 justify-end">
@@ -61,18 +61,18 @@ export default function WeatherWidget({ className }: WeatherWidgetProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-gray-50">
+      <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700">
         <span className={`w-2 h-2 rounded-full ${color}`} />
-        <span className="text-sm font-medium text-slate-700">{label}</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-gray-300">{label}</span>
       </div>
 
       <div className="grid grid-cols-5 gap-1">
         {mockForecast.map((d) => (
           <div key={d.day} className="flex flex-col items-center gap-1 py-2">
-            <span className="text-xs font-medium text-gray-500">{d.day}</span>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{d.day}</span>
             {d.icon}
-            <span className="text-xs font-semibold text-slate-900">{d.high}&deg;</span>
-            <span className="text-xs text-gray-400">{d.low}&deg;</span>
+            <span className="text-xs font-semibold text-slate-900 dark:text-white">{d.high}&deg;</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{d.low}&deg;</span>
           </div>
         ))}
       </div>

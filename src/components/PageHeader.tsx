@@ -25,7 +25,7 @@ export default function PageHeader({
   return (
     <div className={clsx('mb-6', className)}>
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-sm text-slate-400 mb-2">
+        <nav className="flex items-center gap-1.5 text-sm text-slate-400 dark:text-gray-500 mb-2">
           {breadcrumbs.map((crumb, index) => (
             <React.Fragment key={index}>
               {index > 0 && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
@@ -37,7 +37,7 @@ export default function PageHeader({
                   {crumb.label}
                 </a>
               ) : (
-                <span className={index === breadcrumbs.length - 1 ? 'text-slate-700 font-medium' : ''}>
+                <span className={index === breadcrumbs.length - 1 ? 'text-slate-700 dark:text-gray-300 font-medium' : ''}>
                   {crumb.label}
                 </span>
               )}
@@ -47,11 +47,11 @@ export default function PageHeader({
       )}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">
               {subtitle}
             </p>
           )}

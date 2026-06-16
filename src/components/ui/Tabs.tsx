@@ -15,7 +15,7 @@ export interface TabsProps {
 
 export default function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
   return (
-    <div className={twMerge('flex border-b border-gray-200', className)}>
+    <div className={twMerge('flex border-b border-gray-200 dark:border-gray-700', className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -24,8 +24,8 @@ export default function Tabs({ tabs, activeTab, onChange, className }: TabsProps
             'px-4 py-2.5 text-sm font-medium transition-colors relative',
             'focus:outline-none',
             activeTab === tab.id
-              ? 'text-primary'
-              : 'text-gray-500 hover:text-slate-700',
+              ? 'text-primary dark:text-primary-light'
+              : 'text-gray-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200',
           )}
         >
           {tab.label}

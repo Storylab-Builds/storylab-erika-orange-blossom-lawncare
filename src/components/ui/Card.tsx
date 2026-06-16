@@ -25,7 +25,7 @@ export default function Card({
     <div
       className={twMerge(
         clsx(
-          'bg-white rounded-xl shadow-card border border-gray-100',
+          'bg-white dark:bg-gray-800 rounded-xl shadow-card border border-gray-100 dark:border-gray-700',
           paddingStyles[padding],
           hover && 'transition-shadow duration-200 hover:shadow-lg cursor-pointer',
         ),

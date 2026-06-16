@@ -1,80 +1,61 @@
 import { useQuery } from '@tanstack/react-query';
-import { dailyMetrics, dashboardStats, todayJobs, crews } from '@/data/mockData';
+import { api } from '@/lib/api';
 import type { DailyMetrics, DashboardStats } from '@/types';
-
-/**
- * Simulates fetching dashboard summary stats.
- */
-async function fetchDashboardStats(): Promise<DashboardStats> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return dashboardStats;
-}
 
 export function useDashboardStats() {
   return useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
-    queryFn: fetchDashboardStats,
-    staleTime: 60 * 1000, // 1 minute
+    queryFn: () => api.get<DashboardStats>('/dashboard/stats'),
+    staleTime: 60 * 1000,
   });
 }
 
-/**
- * Simulates fetching daily metrics for charts/reports.
- * Optionally filter to last N days.
- */
-async function fetchDailyMetrics(days: number): Promise<DailyMetrics[]> {
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  return dailyMetrics.slice(-days);
-}
-
-export function useDailyMetrics(days: number = 30) {
+export function useDailyMetrics(days = 30) {
   return useQuery<DailyMetrics[]>({
     queryKey: ['daily-metrics', days],
-    queryFn: () => fetchDailyMetrics(days),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => api.get<DailyMetrics[]>(`/reports/daily-metrics?days=${days}`),
+    staleTime: 5 * 60 * 1000,
   });
 }
 
-/**
- * Derived revenue stats for charts.
- */
-export function useRevenueData(days: number = 30) {
-  const { data: metrics, ...rest } = useDailyMetrics(days);
-
-  const revenueData = metrics?.map((m) => ({
-    date: m.date,
-    revenue: m.revenue,
-  }));
-
-  const totalRevenue = metrics?.reduce((sum, m) => sum + m.revenue, 0) ?? 0;
-  const avgDailyRevenue = metrics ? Math.round(totalRevenue / metrics.length) : 0;
-
-  return {
-    ...rest,
-    data: revenueData,
-    totalRevenue,
-    avgDailyRevenue,
-  };
+export interface JobsSeriesPoint {
+  date: string;
+  scheduled: number;
+  completed: number;
 }
 
-/**
- * Crew utilization data for reports.
- */
+export function useJobsSeries(days = 30) {
+  return useQuery<JobsSeriesPoint[]>({
+    queryKey: ['jobs-series', days],
+    queryFn: () => api.get<JobsSeriesPoint[]>(`/reports/jobs-series?days=${days}`),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useRevenueData(days = 30) {
+  const { data: metrics, ...rest } = useDailyMetrics(days);
+
+  const revenueData = metrics?.map((m) => ({ date: m.date, revenue: m.revenue }));
+  const totalRevenue = metrics?.reduce((sum, m) => sum + m.revenue, 0) ?? 0;
+  const avgDailyRevenue = metrics && metrics.length > 0 ? Math.round(totalRevenue / metrics.length) : 0;
+
+  return { ...rest, data: revenueData, totalRevenue, avgDailyRevenue };
+}
+
+export interface CrewUtilization {
+  crewId: string;
+  crewName: string;
+  todayJobs: number;
+  todayCompleted: number;
+  efficiency: number;
+  status: string;
+  zone: string;
+}
+
 export function useCrewUtilization() {
-  return useQuery({
+  return useQuery<CrewUtilization[]>({
     queryKey: ['crew-utilization'],
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return crews.map((crew) => ({
-        crewId: crew.id,
-        crewName: crew.name,
-        todayJobs: crew.todayJobsCount,
-        todayCompleted: crew.todayJobsCompleted,
-        efficiency: crew.efficiency,
-        status: crew.status,
-        zone: crew.serviceZone,
-      }));
-    },
+    queryFn: () => api.get<CrewUtilization[]>('/reports/crew-utilization'),
     staleTime: 30 * 1000,
   });
 }

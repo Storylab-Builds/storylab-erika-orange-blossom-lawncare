@@ -16,7 +16,7 @@ const variantStyles: Record<string, string> = {
   secondary: 'bg-accent-light text-primary hover:bg-accent-medium active:bg-accent',
   outline: 'border-2 border-primary text-primary hover:bg-accent-light active:bg-accent-medium bg-transparent',
   danger: 'bg-error text-white hover:bg-red-600 active:bg-red-700',
-  ghost: 'bg-transparent text-slate-700 hover:bg-gray-100 active:bg-gray-200',
+  ghost: 'bg-transparent text-slate-700 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600',
 };
 
 const sizeStyles: Record<string, string> = {
@@ -42,7 +42,7 @@ export default function Button({
       className={twMerge(
         clsx(
           'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2',
+          'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-gray-800',
           variantStyles[variant],
           sizeStyles[size],
           isDisabled && 'opacity-50 cursor-not-allowed pointer-events-none',

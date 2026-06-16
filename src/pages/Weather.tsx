@@ -41,7 +41,7 @@ function getSeverityStyle(severity: WeatherAlertType['severity']): { bg: string;
     case 'warning': return { bg: 'bg-error/5', text: 'text-error', border: 'border-error/20' };
     case 'watch': return { bg: 'bg-warning/5', text: 'text-warning', border: 'border-warning/20' };
     case 'advisory': return { bg: 'bg-primary/5', text: 'text-primary', border: 'border-primary/20' };
-    default: return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' };
+    default: return { bg: 'bg-slate-50 dark:bg-gray-700', text: 'text-slate-600 dark:text-gray-300', border: 'border-slate-200 dark:border-gray-600' };
   }
 }
 
@@ -56,7 +56,7 @@ export default function Weather() {
     return (
       <div className="text-center py-12">
         <p className="text-lg font-medium text-error">Failed to load weather data</p>
-        <p className="text-sm text-slate-500 mt-1">Please try again later.</p>
+        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Please try again later.</p>
       </div>
     );
   }
@@ -67,43 +67,43 @@ export default function Weather() {
   return (
     <div className="space-y-6">
       {/* Current Conditions */}
-      <Card padding="lg">
+      <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <CurrentIcon className="w-16 h-16 text-warning" />
+            <CurrentIcon className="w-16 h-16 text-warning" aria-hidden="true" />
             <div>
-              <p className="text-4xl font-bold text-slate-900">{current.temp}&#176;F</p>
-              <p className="text-slate-500 mt-1 capitalize">{current.condition} - NE Ohio</p>
-              <p className="text-xs text-slate-400 mt-0.5">Updated just now</p>
+              <p className="text-4xl font-bold text-slate-900 dark:text-white">{current.temp}&#176;F</p>
+              <p className="text-slate-500 dark:text-gray-400 mt-1 capitalize">{current.condition} - NE Ohio</p>
+              <p className="text-xs text-slate-400 dark:text-gray-500 mt-0.5">Updated just now</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             <div className="flex items-center gap-2">
-              <Thermometer className="w-4 h-4 text-slate-400" />
+              <Thermometer className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
               <div>
-                <p className="text-xs text-slate-400">Feels Like</p>
-                <p className="text-sm font-semibold text-slate-900">{current.feelsLike}&#176;F</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">Feels Like</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{current.feelsLike}&#176;F</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-slate-400" />
+              <Droplets className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
               <div>
-                <p className="text-xs text-slate-400">Humidity</p>
-                <p className="text-sm font-semibold text-slate-900">{current.humidity}%</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">Humidity</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{current.humidity}%</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Wind className="w-4 h-4 text-slate-400" />
+              <Wind className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
               <div>
-                <p className="text-xs text-slate-400">Wind</p>
-                <p className="text-sm font-semibold text-slate-900">{current.windSpeed} mph</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">Wind</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{current.windSpeed} mph</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-slate-400" />
+              <Eye className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
               <div>
-                <p className="text-xs text-slate-400">Condition</p>
-                <p className="text-sm font-semibold text-slate-900 capitalize">{current.condition}</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">Condition</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize">{current.condition}</p>
               </div>
             </div>
           </div>
@@ -111,8 +111,8 @@ export default function Weather() {
       </Card>
 
       {/* 7-Day Forecast */}
-      <Card padding="lg">
-        <h3 className="text-sm font-semibold text-slate-900 mb-4">7-Day Forecast</h3>
+      <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">7-Day Forecast</h3>
         <div className="grid grid-cols-7 gap-3">
           {forecast.map((day, idx) => {
             const DayIcon = getConditionIcon(day.condition);
@@ -122,23 +122,23 @@ export default function Weather() {
                 className={`text-center p-3 rounded-xl border ${
                   day.impact === 'high' || day.impact === 'severe' ? 'bg-error/5 border-error/20' :
                   day.impact === 'moderate' ? 'bg-warning/5 border-warning/20' :
-                  'bg-slate-50 border-slate-100'
+                  'bg-slate-50 dark:bg-gray-700 border-slate-100 dark:border-gray-600'
                 }`}
               >
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-xs font-medium text-slate-500 dark:text-gray-400">
                   {idx === 0 ? 'Today' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                 </p>
-                <p className="text-xs text-slate-400">{formatDate(day.date).replace(/, \d{4}$/, '')}</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">{formatDate(day.date).replace(/, \d{4}$/, '')}</p>
                 <DayIcon className={`w-8 h-8 mx-auto my-2 ${
                   day.impact === 'high' || day.impact === 'severe' ? 'text-error' :
-                  day.impact === 'moderate' ? 'text-warning' : 'text-slate-400'
-                }`} />
-                <p className="text-sm font-bold text-slate-900">{day.high}&#176;</p>
-                <p className="text-xs text-slate-400">{day.low}&#176;</p>
+                  day.impact === 'moderate' ? 'text-warning' : 'text-slate-400 dark:text-gray-500'
+                }`} aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{day.high}&#176;</p>
+                <p className="text-xs text-slate-400 dark:text-gray-500">{day.low}&#176;</p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center justify-center gap-1">
-                    <Droplets className="w-3 h-3 text-blue-400" />
-                    <span className="text-xs text-slate-500">{day.precipChance}%</span>
+                    <Droplets className="w-3 h-3 text-blue-400" aria-hidden="true" />
+                    <span className="text-xs text-slate-500 dark:text-gray-400">{day.precipChance}%</span>
                   </div>
                 </div>
                 <p className={`text-[10px] font-medium mt-1 capitalize ${getImpactColor(day.impact)}`}>
@@ -152,10 +152,10 @@ export default function Weather() {
 
       {/* Active Alerts */}
       {alerts.length > 0 && (
-        <Card padding="lg">
+        <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-4 h-4 text-warning" />
-            <h3 className="text-sm font-semibold text-slate-900">Active Weather Alerts</h3>
+            <AlertTriangle className="w-4 h-4 text-warning" aria-hidden="true" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Active Weather Alerts</h3>
           </div>
           <div className="space-y-3">
             {alerts.map((alert) => {
@@ -170,14 +170,14 @@ export default function Weather() {
                       {alert.severity.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">{alert.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-slate-400">
+                  <p className="text-sm text-slate-600 dark:text-gray-400 mb-2">{alert.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-gray-500">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3" aria-hidden="true" />
                       {formatDate(alert.startTime)} - {formatDate(alert.endTime)}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
+                      <Calendar className="w-3 h-3" aria-hidden="true" />
                       {alert.affectedJobs} jobs affected
                     </span>
                   </div>

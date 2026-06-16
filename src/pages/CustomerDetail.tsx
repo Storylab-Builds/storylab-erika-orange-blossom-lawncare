@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Phone,
@@ -16,12 +16,19 @@ import {
   StickyNote,
   Edit,
   Send,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
-import { useCustomer } from '@/hooks';
+import {
+  useCustomer,
+  useSendNotification,
+  useNotifications,
+  useUpdateCustomer,
+  useDeleteCustomer,
+} from '@/hooks';
 import { formatCurrency, formatDate, getServiceColor, getRelativeTime } from '@/lib/utils';
 import { SERVICE_TYPES } from '@/lib/constants';
-import { notifications } from '@/data/mockData';
-import type { Customer, ServiceAgreement, Notification } from '@/types';
+import type { Customer, ServiceAgreement } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -54,14 +61,25 @@ const MESSAGE_TEMPLATES: { value: string; label: string; body: string }[] = [
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: customer, isLoading, isError } = useCustomer(id ?? null);
+  const { data: notifications } = useNotifications();
+  const sendNotification = useSendNotification();
+  const updateCustomer = useUpdateCustomer();
+  const deleteCustomer = useDeleteCustomer();
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageChannel, setMessageChannel] = useState<'sms' | 'email'>('sms');
   const [messageSubject, setMessageSubject] = useState('');
   const [messageBody, setMessageBody] = useState('');
   const [messageTemplate, setMessageTemplate] = useState('');
-  const [sentMessages, setSentMessages] = useState<Array<{ id: string; channel: 'sms' | 'email'; subject: string; body: string; sentAt: string }>>([]);
-  const [sending, setSending] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<{ name: string; phone: string; email: string; status: Customer['status'] }>({
+    name: '',
+    phone: '',
+    email: '',
+    status: 'active',
+  });
 
   if (isLoading) {
     return <LoadingSpinner fullPage label="Loading customer..." />;
@@ -70,12 +88,12 @@ export default function CustomerDetail() {
   if (isError || !customer) {
     return (
       <div className="space-y-6">
-        <Link to="/customers" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Customers
+        <Link to="/customers" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-gray-400 hover:text-primary transition-colors">
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Customers
         </Link>
         <div className="text-center py-12">
-          <p className="text-lg font-medium text-slate-700">Customer not found</p>
-          <p className="text-sm text-slate-500 mt-1">The customer you are looking for does not exist.</p>
+          <p className="text-lg font-medium text-slate-700 dark:text-gray-300">Customer not found</p>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">The customer you are looking for does not exist.</p>
         </div>
       </div>
     );
@@ -88,7 +106,7 @@ export default function CustomerDetail() {
       : `${property.lotSize.toLocaleString()} sqft`
     : 'N/A';
 
-  const customerNotifications = notifications.filter((n) => n.customerId === customer.id);
+  const customerNotifications = (notifications ?? []).filter((n) => n.customerId === customer.id);
 
   function handleTemplateChange(value: string) {
     setMessageTemplate(value);
@@ -102,62 +120,115 @@ export default function CustomerDetail() {
   }
 
   function openMessageModal() {
+    if (!customer) return;
     setMessageChannel(customer.preferredContact === 'email' ? 'email' : 'sms');
     setMessageSubject('');
     setMessageBody('');
     setMessageTemplate('');
+    sendNotification.reset();
     setShowMessageModal(true);
   }
 
   function handleSendMessage() {
-    if (!messageBody.trim()) return;
-    setSending(true);
-    // Simulate send delay
-    setTimeout(() => {
-      setSentMessages((prev) => [
-        {
-          id: `msg-${Date.now()}`,
-          channel: messageChannel,
-          subject: messageSubject,
-          body: messageBody,
-          sentAt: new Date().toISOString(),
+    if (!customer || !messageBody.trim()) return;
+    sendNotification.mutate(
+      {
+        customerId: customer.id,
+        customerName: customer.name,
+        channel: messageChannel,
+        message: messageBody,
+        type: 'reminder',
+      },
+      {
+        onSuccess: () => {
+          setShowMessageModal(false);
         },
-        ...prev,
-      ]);
-      setSending(false);
-      setShowMessageModal(false);
-    }, 800);
+      },
+    );
+  }
+
+  function openEditModal() {
+    if (!customer) return;
+    setEditForm({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      status: customer.status,
+    });
+    updateCustomer.reset();
+    setShowEditModal(true);
+  }
+
+  function handleUpdateCustomer() {
+    if (!customer || !editForm.name.trim()) return;
+    updateCustomer.mutate(
+      {
+        id: customer.id,
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email.trim(),
+        status: editForm.status,
+      },
+      {
+        onSuccess: () => {
+          setShowEditModal(false);
+        },
+      },
+    );
+  }
+
+  function openDeleteModal() {
+    deleteCustomer.reset();
+    setShowDeleteModal(true);
+  }
+
+  function handleDeleteCustomer() {
+    if (!customer) return;
+    deleteCustomer.mutate(customer.id, {
+      onSuccess: () => {
+        setShowDeleteModal(false);
+        navigate('/customers');
+      },
+    });
   }
 
   return (
     <div className="space-y-6">
       {/* Back link */}
-      <Link to="/customers" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back to Customers
+      <Link to="/customers" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-gray-400 hover:text-primary transition-colors">
+        <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Customers
       </Link>
 
       {/* Customer Header */}
-      <Card padding="lg">
+      <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-slate-900">{customer.name}</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{customer.name}</h2>
               <Badge variant={getStatusBadgeVariant(customer.status)}>
                 {customer.status}
               </Badge>
             </div>
-            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-slate-500">
-              <span className="flex items-center gap-1.5"><Phone className="w-4 h-4" /> {customer.phone}</span>
-              <span className="flex items-center gap-1.5"><Mail className="w-4 h-4" /> {customer.email}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {customer.address}, {customer.city}, {customer.state} {customer.zip}</span>
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-slate-500 dark:text-gray-400">
+              <span className="flex items-center gap-1.5"><Phone className="w-4 h-4" aria-hidden="true" /> {customer.phone}</span>
+              <span className="flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" /> {customer.email}</span>
+              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" aria-hidden="true" /> {customer.address}, {customer.city}, {customer.state} {customer.zip}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="primary" icon={<Send className="w-4 h-4" />} onClick={openMessageModal}>
               Send Message
             </Button>
-            <Button variant="outline" icon={<Edit className="w-4 h-4" />}>
+            <Button variant="outline" icon={<Edit className="w-4 h-4" />} onClick={openEditModal}>
               Edit
+            </Button>
+            <Button
+              variant="outline"
+              icon={<Trash2 className="w-4 h-4" />}
+              onClick={openDeleteModal}
+              className="border-error text-error hover:bg-error/10 active:bg-error/20"
+            >
+              Delete
             </Button>
           </div>
         </div>
@@ -168,41 +239,41 @@ export default function CustomerDetail() {
         <div className="lg:col-span-2 space-y-6">
           {/* Property Details */}
           {property && (
-            <Card padding="lg">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Property Details</h3>
+            <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Property Details</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <Ruler className="w-4 h-4 text-slate-400" />
+                  <Ruler className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                   <div>
-                    <p className="text-xs text-slate-500">Size</p>
-                    <p className="text-sm font-medium text-slate-900">{lotDisplay}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Size</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{lotDisplay}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Home className="w-4 h-4 text-slate-400" />
+                  <Home className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                   <div>
-                    <p className="text-xs text-slate-500">Address</p>
-                    <p className="text-sm font-medium text-slate-900">{customer.city}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Address</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{customer.city}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <KeyRound className="w-4 h-4 text-slate-400" />
+                  <KeyRound className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                   <div>
-                    <p className="text-xs text-slate-500">Gate Code</p>
-                    <p className="text-sm font-medium text-slate-900">{property.gateCode ?? 'N/A'}</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Gate Code</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{property.gateCode ?? 'N/A'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <TreePine className="w-4 h-4 text-slate-400" />
+                  <TreePine className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                   <div>
-                    <p className="text-xs text-slate-500">Features</p>
-                    <p className="text-sm font-medium text-slate-900">{property.features.length} noted</p>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Features</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{property.features.length} noted</p>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 {property.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                  <div key={i} className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     {f}
                   </div>
@@ -211,7 +282,7 @@ export default function CustomerDetail() {
               {property.accessInstructions && (
                 <div className="mt-4 p-3 rounded-xl bg-warning/5 border border-warning/20">
                   <p className="text-xs font-medium text-warning mb-1">Access Notes</p>
-                  <p className="text-sm text-slate-600">{property.accessInstructions}</p>
+                  <p className="text-sm text-slate-600 dark:text-gray-400">{property.accessInstructions}</p>
                 </div>
               )}
             </Card>
@@ -219,11 +290,11 @@ export default function CustomerDetail() {
 
           {/* Notes */}
           {customer.notes && (
-            <Card padding="lg">
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Notes</h3>
+            <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Notes</h3>
               <div className="flex items-start gap-2">
-                <StickyNote className="w-3.5 h-3.5 text-warning mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-slate-600">{customer.notes}</p>
+                <StickyNote className="w-3.5 h-3.5 text-warning mt-0.5 flex-shrink-0" aria-hidden="true" />
+                <p className="text-sm text-slate-600 dark:text-gray-400">{customer.notes}</p>
               </div>
             </Card>
           )}
@@ -232,13 +303,13 @@ export default function CustomerDetail() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Active Services */}
-          <Card padding="lg">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Active Services</h3>
+          <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Active Services</h3>
             <div className="space-y-3">
               {property?.services
                 .filter((s) => s.status === 'active')
                 .map((svc) => (
-                  <div key={svc.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div key={svc.id} className="p-3 rounded-xl bg-slate-50 dark:bg-gray-700 border border-slate-100 dark:border-gray-600">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getServiceColor(svc.serviceType)}`}>
@@ -247,30 +318,30 @@ export default function CustomerDetail() {
                       </div>
                       <span className="text-sm font-semibold text-primary">{formatCurrency(svc.price)}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {svc.frequency}</span>
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {svc.estimatedDuration} min</span>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400">
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" aria-hidden="true" /> {svc.frequency}</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" aria-hidden="true" /> {svc.estimatedDuration} min</span>
                     </div>
                     {svc.nextScheduledDate && (
-                      <p className="text-xs text-slate-400 mt-1">Next: {formatDate(svc.nextScheduledDate)}</p>
+                      <p className="text-xs text-slate-400 dark:text-gray-500 mt-1">Next: {formatDate(svc.nextScheduledDate)}</p>
                     )}
                   </div>
                 )) ?? (
-                <p className="text-sm text-slate-400">No active services</p>
+                <p className="text-sm text-slate-400 dark:text-gray-500">No active services</p>
               )}
             </div>
           </Card>
 
           {/* Customer Info */}
-          <Card padding="lg">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Contact Info</h3>
+          <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Contact Info</h3>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-600">
-                <MessageSquare className="w-4 h-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
+                <MessageSquare className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                 Preferred: {customer.preferredContact}
               </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <Calendar className="w-4 h-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
+                <Calendar className="w-4 h-4 text-slate-400 dark:text-gray-500" aria-hidden="true" />
                 Customer since: {formatDate(customer.createdAt)}
               </div>
             </div>
@@ -279,51 +350,25 @@ export default function CustomerDetail() {
       </div>
 
       {/* Communication History */}
-      <Card padding="lg">
+      <Card padding="lg" className="dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-900">Communication History</h3>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Communication History</h3>
           <Button variant="outline" size="sm" icon={<Send className="w-3.5 h-3.5" />} onClick={openMessageModal}>
             New Message
           </Button>
         </div>
 
-        {/* Manually sent messages */}
-        {sentMessages.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Sent from this session</p>
-            <div className="space-y-2">
-              {sentMessages.map((msg) => (
-                <div key={msg.id} className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.channel === 'sms' ? 'bg-success/10' : 'bg-primary/10'}`}>
-                    {msg.channel === 'sms' ? <Phone className="w-4 h-4 text-success" /> : <Mail className="w-4 h-4 text-primary" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 uppercase font-medium">{msg.channel}</span>
-                      {msg.subject && <span className="text-sm font-medium text-slate-700">{msg.subject}</span>}
-                      <Badge variant="success">sent</Badge>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-0.5">{msg.body}</p>
-                  </div>
-                  <span className="text-xs text-slate-400 shrink-0">{getRelativeTime(msg.sentAt)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Existing notification history */}
+        {/* Notification history (persisted) */}
         {customerNotifications.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Automated notifications</p>
             {customerNotifications.map((n) => (
-              <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              <div key={n.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${n.channel === 'sms' ? 'bg-success/10' : 'bg-primary/10'}`}>
-                  {n.channel === 'sms' ? <Phone className="w-4 h-4 text-success" /> : <Mail className="w-4 h-4 text-primary" />}
+                  {n.channel === 'sms' ? <Phone className="w-4 h-4 text-success" aria-hidden="true" /> : <Mail className="w-4 h-4 text-primary" aria-hidden="true" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 uppercase font-medium">{n.channel}</span>
+                    <span className="text-xs text-slate-400 dark:text-gray-500 uppercase font-medium">{n.channel}</span>
                     <Badge variant={n.type === 'weather' ? 'warning' : n.type === 'completion' ? 'success' : 'info'}>
                       {n.type}
                     </Badge>
@@ -331,32 +376,32 @@ export default function CustomerDetail() {
                       {n.status}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">{n.message}</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 truncate mt-0.5">{n.message}</p>
                 </div>
-                <span className="text-xs text-slate-400 shrink-0">{getRelativeTime(n.sentAt)}</span>
+                <span className="text-xs text-slate-400 dark:text-gray-500 shrink-0">{getRelativeTime(n.sentAt)}</span>
               </div>
             ))}
           </div>
-        ) : sentMessages.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-4">No communications yet. Send the first message to this customer.</p>
-        ) : null}
+        ) : (
+          <p className="text-sm text-slate-400 dark:text-gray-500 text-center py-4">No communications yet. Send the first message to this customer.</p>
+        )}
       </Card>
 
       {/* Send Message Modal */}
       <Modal isOpen={showMessageModal} onClose={() => setShowMessageModal(false)} title="Send Message" size="md">
         <div className="space-y-4">
           {/* Recipient info */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-sm font-medium text-slate-900">{customer.name}</p>
-            <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
-              <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {customer.phone}</span>
-              <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {customer.email}</span>
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-700 border border-slate-100 dark:border-gray-600">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{customer.name}</p>
+            <div className="flex items-center gap-4 mt-1 text-xs text-slate-500 dark:text-gray-400">
+              <span className="flex items-center gap-1"><Phone className="w-3 h-3" aria-hidden="true" /> {customer.phone}</span>
+              <span className="flex items-center gap-1"><Mail className="w-3 h-3" aria-hidden="true" /> {customer.email}</span>
             </div>
           </div>
 
           {/* Channel selector */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Channel</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Channel</label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -364,10 +409,10 @@ export default function CustomerDetail() {
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
                   messageChannel === 'sms'
                     ? 'bg-success/10 border-success/30 text-success'
-                    : 'bg-white border-gray-200 text-slate-500 hover:bg-slate-50'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700'
                 }`}
               >
-                <Phone className="w-4 h-4" />
+                <Phone className="w-4 h-4" aria-hidden="true" />
                 SMS
               </button>
               <button
@@ -376,10 +421,10 @@ export default function CustomerDetail() {
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
                   messageChannel === 'email'
                     ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'bg-white border-gray-200 text-slate-500 hover:bg-slate-50'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700'
                 }`}
               >
-                <Mail className="w-4 h-4" />
+                <Mail className="w-4 h-4" aria-hidden="true" />
                 Email
               </button>
             </div>
@@ -406,18 +451,24 @@ export default function CustomerDetail() {
 
           {/* Message body */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Message</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Message</label>
             <textarea
               value={messageBody}
               onChange={(e) => setMessageBody(e.target.value)}
               rows={4}
               placeholder={messageChannel === 'sms' ? 'Type your SMS message...' : 'Type your email message...'}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-gray-400 transition-colors duration-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors duration-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
             />
             {messageChannel === 'sms' && (
-              <p className="mt-1 text-xs text-slate-400">{messageBody.length}/160 characters</p>
+              <p className="mt-1 text-xs text-slate-400 dark:text-gray-500">{messageBody.length}/160 characters</p>
             )}
           </div>
+
+          {sendNotification.isError && (
+            <p className="text-sm text-error">
+              {(sendNotification.error as Error)?.message ?? 'Failed to send message. Please try again.'}
+            </p>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
@@ -428,10 +479,108 @@ export default function CustomerDetail() {
               variant="primary"
               icon={<Send className="w-4 h-4" />}
               onClick={handleSendMessage}
-              loading={sending}
+              loading={sendNotification.isPending}
               disabled={!messageBody.trim()}
             >
               Send {messageChannel === 'sms' ? 'SMS' : 'Email'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Customer" size="md">
+        <div className="space-y-4">
+          <Input
+            label="Name"
+            value={editForm.name}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+            placeholder="Customer full name"
+            required
+          />
+          <Input
+            label="Phone"
+            type="tel"
+            value={editForm.phone}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+            placeholder="(555) 123-4567"
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={editForm.email}
+            onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+            placeholder="name@example.com"
+          />
+          <Select
+            label="Status"
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'prospect', label: 'Prospect' },
+            ]}
+            value={editForm.status}
+            onChange={(value) => setEditForm((prev) => ({ ...prev, status: value as Customer['status'] }))}
+          />
+
+          {updateCustomer.isError && (
+            <p className="text-sm text-error">
+              {(updateCustomer.error as Error)?.message ?? 'Failed to update customer. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              icon={<Edit className="w-4 h-4" />}
+              onClick={handleUpdateCustomer}
+              loading={updateCustomer.isPending}
+              disabled={!editForm.name.trim()}
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Customer Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Customer" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-error" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-700 dark:text-gray-300">
+                Are you sure you want to delete{' '}
+                <span className="font-semibold text-slate-900 dark:text-white">{customer.name}</span>?
+              </p>
+              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+                This will permanently remove the customer and cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {deleteCustomer.isError && (
+            <p className="text-sm text-error">
+              {(deleteCustomer.error as Error)?.message ?? 'Failed to delete customer. Please try again.'}
+            </p>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)} disabled={deleteCustomer.isPending}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              icon={<Trash2 className="w-4 h-4" />}
+              onClick={handleDeleteCustomer}
+              loading={deleteCustomer.isPending}
+            >
+              Delete Customer
             </Button>
           </div>
         </div>

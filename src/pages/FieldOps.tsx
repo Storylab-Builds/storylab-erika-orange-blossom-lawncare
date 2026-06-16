@@ -12,7 +12,7 @@ import {
   Timer,
   ChevronRight,
 } from 'lucide-react';
-import { useTodayJobs } from '@/hooks';
+import { useTodayJobs, useUpdateJob } from '@/hooks';
 import { useAppStore } from '@/store/appStore';
 import { SERVICE_TYPES } from '@/lib/constants';
 import { formatTime, getRelativeTime } from '@/lib/utils';
@@ -26,19 +26,22 @@ function getJobStatusStyle(status: Job['status']): { bg: string; border: string 
   switch (status) {
     case 'completed': return { bg: 'bg-success/5', border: 'border-success/20' };
     case 'in-progress': return { bg: 'bg-primary/5', border: 'border-primary/20' };
-    default: return { bg: 'bg-white', border: 'border-slate-100' };
+    default: return { bg: 'bg-white dark:bg-gray-800', border: 'border-slate-100 dark:border-gray-700' };
   }
 }
 
 export default function FieldOps() {
+  // Clock-in / break toggles are intentionally client-only operator-session UI
+  // state for now: they represent the device operator's session, not a specific
+  // employee record, so they are not persisted to the backend.
   const clockedIn = useAppStore((s) => s.clockedIn);
   const clockInTime = useAppStore((s) => s.clockInTime);
   const onBreak = useAppStore((s) => s.onBreak);
   const toggleClockIn = useAppStore((s) => s.toggleClockIn);
   const toggleBreak = useAppStore((s) => s.toggleBreak);
-  const completeJob = useAppStore((s) => s.completeJob);
-  const setActiveJob = useAppStore((s) => s.setActiveJob);
-  const activeJobId = useAppStore((s) => s.activeJobId);
+
+  // Job status changes persist via the API (jobs query invalidates/refetches).
+  const updateJob = useUpdateJob();
 
   // Break timer: counts up in seconds while onBreak is true
   const [breakSeconds, setBreakSeconds] = useState(0);
@@ -82,16 +85,16 @@ export default function FieldOps() {
       <Card padding="lg">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-sm text-slate-500">Field Operations</p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-sm text-slate-500 dark:text-gray-400">Field Operations</p>
+            <p className="text-xs text-slate-400 dark:text-gray-500 mt-0.5">
               {clockedIn && clockInTime
                 ? `Clocked in ${getRelativeTime(clockInTime)}`
                 : 'Not clocked in'}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold text-slate-900">{completed}/{total} jobs</p>
-            <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1">
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{completed}/{total} jobs</p>
+            <div className="w-24 h-1.5 bg-slate-100 dark:bg-gray-700 rounded-full mt-1">
               <div
                 className="h-full bg-primary rounded-full transition-all"
                 style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }}
@@ -127,7 +130,7 @@ export default function FieldOps() {
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
                 onBreak
                   ? 'bg-warning/10 text-warning border border-warning/20'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  : 'bg-slate-50 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-600 border border-slate-200 dark:border-gray-600'
               }`}
             >
               <Coffee className="w-4 h-4" />
@@ -147,12 +150,12 @@ export default function FieldOps() {
       <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-success/5 border border-success/20" role="status">
         <Navigation className="w-4 h-4 text-success" />
         <span className="text-sm text-success font-medium">GPS Active</span>
-        <span className="text-xs text-slate-400 ml-auto">Location verified</span>
+        <span className="text-xs text-slate-400 dark:text-gray-500 ml-auto">Location verified</span>
       </div>
 
       {/* Today's Jobs */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-900 mb-3">Today&apos;s Jobs</h3>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Today&apos;s Jobs</h3>
         <div className="space-y-3">
           {jobs.map((job) => {
             const st = getJobStatusStyle(job.status);
@@ -166,7 +169,7 @@ export default function FieldOps() {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-slate-900">{job.customerName}</h4>
+                      <h4 className="font-semibold text-slate-900 dark:text-white">{job.customerName}</h4>
                       {job.status === 'completed' && (
                         <CheckCircle2 className="w-4 h-4 text-success" />
                       )}
@@ -174,23 +177,23 @@ export default function FieldOps() {
                         <Badge variant="info" className="animate-pulse">In Progress</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-slate-600 mt-0.5">{serviceLabel}</p>
+                    <p className="text-sm text-slate-600 dark:text-gray-400 mt-0.5">{serviceLabel}</p>
                   </div>
-                  <div className="text-right text-xs text-slate-400">
-                    <p className="font-medium text-slate-600">{formatTime(job.startTime)} - {formatTime(job.endTime)}</p>
+                  <div className="text-right text-xs text-slate-400 dark:text-gray-500">
+                    <p className="font-medium text-slate-600 dark:text-gray-400">{formatTime(job.startTime)} - {formatTime(job.endTime)}</p>
                     <p>{job.crewName}</p>
                   </div>
                 </div>
 
                 {/* Address */}
-                <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-2">
+                <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-gray-400 mb-2">
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                   <span>{job.propertyAddress}</span>
                 </div>
 
                 {/* Notes */}
                 {job.notes && (
-                  <div className="flex items-start gap-1.5 text-xs text-slate-400 mb-3 p-2 rounded-lg bg-slate-50">
+                  <div className="flex items-start gap-1.5 text-xs text-slate-400 dark:text-gray-500 mb-3 p-2 rounded-lg bg-slate-50 dark:bg-gray-700">
                     <Clipboard className="w-3 h-3 mt-0.5 flex-shrink-0" />
                     <span>{job.notes}</span>
                   </div>
@@ -202,7 +205,8 @@ export default function FieldOps() {
                     <Button
                       className="flex-1"
                       icon={<Play className="w-4 h-4" />}
-                      onClick={() => setActiveJob(job.id)}
+                      disabled={updateJob.isPending}
+                      onClick={() => updateJob.mutate({ id: job.id, status: 'in-progress' })}
                     >
                       Start Job
                     </Button>
@@ -212,7 +216,8 @@ export default function FieldOps() {
                       className="flex-1"
                       variant="primary"
                       icon={<CheckCircle2 className="w-4 h-4" />}
-                      onClick={() => completeJob(job.id)}
+                      disabled={updateJob.isPending}
+                      onClick={() => updateJob.mutate({ id: job.id, status: 'completed' })}
                     >
                       Complete Job
                     </Button>
@@ -223,13 +228,13 @@ export default function FieldOps() {
                     </div>
                   )}
                   <button
-                    className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-gray-600 text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
                     aria-label="Call customer"
                   >
                     <Phone className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-colors"
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-gray-600 text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
                     aria-label="Navigate to address"
                   >
                     <Navigation className="w-4 h-4" />

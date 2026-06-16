@@ -11,6 +11,7 @@ import {
   X,
   Plus,
   Users,
+  AlertCircle,
 } from 'lucide-react';
 import { SERVICE_TYPES } from '@/lib/constants';
 import type { Crew, Employee, Equipment, ServiceType } from '@/types';
@@ -22,7 +23,17 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
-import { useAppStore } from '@/store/appStore';
+import EmptyState from '@/components/ui/EmptyState';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import {
+  useCrews,
+  useCreateCrew,
+  useUpdateCrew,
+  useDeleteCrew,
+  useAddCrewMember,
+  useUpdateCrewMember,
+  useRemoveCrewMember,
+} from '@/hooks';
 
 function getCrewStatusBadge(status: Crew['status']): { variant: 'success' | 'warning' | 'neutral' | 'info'; label: string } {
   switch (status) {
@@ -62,7 +73,7 @@ function EditCrewModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const updateCrew = useAppStore((s) => s.updateCrew);
+  const updateCrew = useUpdateCrew();
   const [name, setName] = useState(crew.name);
   const [serviceZone, setServiceZone] = useState(crew.serviceZone);
   const [status, setStatus] = useState<Crew['status']>(crew.status);
@@ -75,8 +86,10 @@ function EditCrewModal({
   };
 
   const handleSave = () => {
-    updateCrew(crew.id, { name, serviceZone, status, specialties });
-    onClose();
+    updateCrew.mutate(
+      { id: crew.id, name, serviceZone, status, specialties },
+      { onSuccess: () => onClose() },
+    );
   };
 
   return (
@@ -87,7 +100,7 @@ function EditCrewModal({
         <Select label="Status" options={STATUS_OPTIONS} value={status} onChange={(v) => setStatus(v as Crew['status'])} />
 
         <div>
-          <p className="block text-sm font-medium text-slate-700 mb-1.5">Specialties</p>
+          <p className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Specialties</p>
           <div className="flex flex-wrap gap-2">
             {ALL_SPECIALTIES.map((sp) => {
               const active = specialties.includes(sp.value);
@@ -99,7 +112,7 @@ function EditCrewModal({
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                     active
                       ? 'bg-primary/10 border-primary text-primary'
-                      : 'bg-white border-gray-200 text-slate-500 hover:border-gray-300'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {sp.label}
@@ -111,7 +124,9 @@ function EditCrewModal({
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button icon={<Save className="w-4 h-4" />} onClick={handleSave}>Save Changes</Button>
+          <Button icon={<Save className="w-4 h-4" />} onClick={handleSave} disabled={updateCrew.isPending}>
+            {updateCrew.isPending ? 'Saving…' : 'Save Changes'}
+          </Button>
         </div>
       </div>
     </Modal>
@@ -131,14 +146,16 @@ function EditMemberModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const updateCrewMember = useAppStore((s) => s.updateCrewMember);
+  const updateCrewMember = useUpdateCrewMember();
   const [name, setName] = useState(member.name);
   const [role, setRole] = useState(member.role);
   const [phone, setPhone] = useState(member.phone);
 
   const handleSave = () => {
-    updateCrewMember(crewId, member.id, { name, role: role as Employee['role'], phone });
-    onClose();
+    updateCrewMember.mutate(
+      { crewId, memberId: member.id, name, role: role as Employee['role'], phone },
+      { onSuccess: () => onClose() },
+    );
   };
 
   return (
@@ -150,7 +167,9 @@ function EditMemberModal({
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button icon={<Save className="w-4 h-4" />} onClick={handleSave}>Save Changes</Button>
+          <Button icon={<Save className="w-4 h-4" />} onClick={handleSave} disabled={updateCrewMember.isPending}>
+            {updateCrewMember.isPending ? 'Saving…' : 'Save Changes'}
+          </Button>
         </div>
       </div>
     </Modal>
@@ -168,26 +187,24 @@ function AddMemberModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const addCrewMember = useAppStore((s) => s.addCrewMember);
+  const addCrewMember = useAddCrewMember();
   const [name, setName] = useState('');
   const [role, setRole] = useState<Employee['role']>('technician');
   const [phone, setPhone] = useState('');
 
   const handleSave = () => {
     if (!name.trim()) return;
-    const newMember: Employee = {
-      id: `emp-${Date.now()}`,
-      name: name.trim(),
-      role,
-      phone: phone.trim(),
-      clockedIn: false,
-      onBreak: false,
-    };
-    addCrewMember(crewId, newMember);
-    setName('');
-    setPhone('');
-    setRole('technician');
-    onClose();
+    addCrewMember.mutate(
+      { crewId, name: name.trim(), role, phone: phone.trim() },
+      {
+        onSuccess: () => {
+          setName('');
+          setPhone('');
+          setRole('technician');
+          onClose();
+        },
+      },
+    );
   };
 
   return (
@@ -199,8 +216,12 @@ function AddMemberModal({
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button icon={<UserPlus className="w-4 h-4" />} onClick={handleSave} disabled={!name.trim()}>
-            Add Member
+          <Button
+            icon={<UserPlus className="w-4 h-4" />}
+            onClick={handleSave}
+            disabled={!name.trim() || addCrewMember.isPending}
+          >
+            {addCrewMember.isPending ? 'Adding…' : 'Add Member'}
           </Button>
         </div>
       </div>
@@ -221,6 +242,13 @@ const EQUIPMENT_TYPE_OPTIONS: { value: Equipment['type']; label: string }[] = [
   { value: 'trimmer', label: 'Trimmer' },
 ];
 
+interface NewMemberDraft {
+  id: string;
+  name: string;
+  role: Employee['role'];
+  phone: string;
+}
+
 function AddCrewModal({
   isOpen,
   onClose,
@@ -228,14 +256,14 @@ function AddCrewModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const addCrew = useAppStore((s) => s.addCrew);
+  const createCrew = useCreateCrew();
   const [name, setName] = useState('');
   const [serviceZone, setServiceZone] = useState('');
   const [specialties, setSpecialties] = useState<ServiceType[]>([]);
   const [memberName, setMemberName] = useState('');
   const [memberRole, setMemberRole] = useState<Employee['role']>('crew-lead');
   const [memberPhone, setMemberPhone] = useState('');
-  const [members, setMembers] = useState<Employee[]>([]);
+  const [members, setMembers] = useState<NewMemberDraft[]>([]);
 
   const toggleSpecialty = (s: ServiceType) => {
     setSpecialties((prev) =>
@@ -252,8 +280,6 @@ function AddCrewModal({
         name: memberName.trim(),
         role: memberRole,
         phone: memberPhone.trim(),
-        clockedIn: false,
-        onBreak: false,
       },
     ]);
     setMemberName('');
@@ -267,20 +293,29 @@ function AddCrewModal({
 
   const handleSave = () => {
     if (!name.trim()) return;
-    const newCrew: Crew = {
-      id: `crew-${Date.now()}`,
-      name: name.trim(),
-      serviceZone: serviceZone.trim() || 'Unassigned',
-      specialties,
-      members,
-      equipment: [],
-      status: 'available',
-      todayJobsCount: 0,
-      todayJobsCompleted: 0,
-      efficiency: 0,
-    };
-    addCrew(newCrew);
-    onClose();
+    createCrew.mutate(
+      {
+        name: name.trim(),
+        serviceZone: serviceZone.trim() || 'Unassigned',
+        specialties,
+        status: 'available',
+        efficiency: 0,
+        members: members.map((m) => ({
+          name: m.name,
+          role: m.role,
+          phone: m.phone,
+        })) as Crew['members'],
+      },
+      {
+        onSuccess: () => {
+          setName('');
+          setServiceZone('');
+          setSpecialties([]);
+          setMembers([]);
+          onClose();
+        },
+      },
+    );
   };
 
   return (
@@ -290,7 +325,7 @@ function AddCrewModal({
         <Input label="Service Zone" value={serviceZone} onChange={(e) => setServiceZone(e.target.value)} placeholder="e.g. North Canton / Green" />
 
         <div>
-          <p className="block text-sm font-medium text-slate-700 mb-1.5">Specialties</p>
+          <p className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Specialties</p>
           <div className="flex flex-wrap gap-2">
             {ALL_SPECIALTIES.map((sp) => {
               const active = specialties.includes(sp.value);
@@ -302,7 +337,7 @@ function AddCrewModal({
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                     active
                       ? 'bg-primary/10 border-primary text-primary'
-                      : 'bg-white border-gray-200 text-slate-500 hover:border-gray-300'
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {sp.label}
@@ -314,21 +349,22 @@ function AddCrewModal({
 
         {/* Inline member builder */}
         <div>
-          <p className="block text-sm font-medium text-slate-700 mb-1.5">Crew Members</p>
+          <p className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1.5">Crew Members</p>
           {members.length > 0 && (
             <div className="space-y-1.5 mb-3">
               {members.map((m) => (
-                <div key={m.id} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                <div key={m.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary">
                       {getInitials(m.name)}
                     </div>
-                    <span className="text-slate-700">{m.name}</span>
-                    <span className="text-xs text-slate-400">({m.role})</span>
+                    <span className="text-slate-700 dark:text-gray-300">{m.name}</span>
+                    <span className="text-xs text-slate-400 dark:text-gray-500">({m.role})</span>
                   </div>
                   <button
                     onClick={() => handleRemoveMember(m.id)}
-                    className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    aria-label={`Remove ${m.name}`}
+                    className="p-1 rounded text-slate-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -340,7 +376,7 @@ function AddCrewModal({
             <Input label="" value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="Member name" />
             <Select options={ROLE_OPTIONS} value={memberRole} onChange={(v) => setMemberRole(v as Employee['role'])} />
             <Input label="" value={memberPhone} onChange={(e) => setMemberPhone(e.target.value)} placeholder="Phone" />
-            <Button variant="secondary" size="sm" onClick={handleAddMember} disabled={!memberName.trim()}>
+            <Button variant="secondary" size="sm" onClick={handleAddMember} disabled={!memberName.trim()} aria-label="Add member to list">
               <UserPlus className="w-4 h-4" />
             </Button>
           </div>
@@ -348,8 +384,12 @@ function AddCrewModal({
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button icon={<Plus className="w-4 h-4" />} onClick={handleSave} disabled={!name.trim()}>
-            Create Crew
+          <Button
+            icon={<Plus className="w-4 h-4" />}
+            onClick={handleSave}
+            disabled={!name.trim() || createCrew.isPending}
+          >
+            {createCrew.isPending ? 'Creating…' : 'Create Crew'}
           </Button>
         </div>
       </div>
@@ -360,9 +400,9 @@ function AddCrewModal({
 // --- Main Crews Page ---
 
 export default function Crews() {
-  const crews = useAppStore((s) => s.crews);
-  const removeCrewMember = useAppStore((s) => s.removeCrewMember);
-  const removeCrew = useAppStore((s) => s.removeCrew);
+  const { data: crews = [], isLoading, isError } = useCrews();
+  const removeCrewMember = useRemoveCrewMember();
+  const deleteCrew = useDeleteCrew();
 
   const [editingCrew, setEditingCrew] = useState<Crew | null>(null);
   const [editingMember, setEditingMember] = useState<{ crewId: string; member: Employee } | null>(null);
@@ -373,7 +413,9 @@ export default function Crews() {
 
   const activeCrews = crews.filter((c) => c.status !== 'off-duty').length;
   const totalMembers = crews.reduce((s, c) => s + c.members.length, 0);
-  const avgEfficiency = Math.round(crews.reduce((s, c) => s + c.efficiency, 0) / crews.length);
+  const avgEfficiency = crews.length
+    ? Math.round(crews.reduce((s, c) => s + c.efficiency, 0) / crews.length)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -392,155 +434,197 @@ export default function Crews() {
         </div>
       </div>
 
-      {/* Crew Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {crews.map((crew) => {
-          const statusBadge = getCrewStatusBadge(crew.status);
-          return (
-            <Card key={crew.id} padding="lg">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-bold text-slate-900">{crew.name}</h3>
-                    <Badge variant={statusBadge.variant}>
-                      {statusBadge.label}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Zone: {crew.serviceZone}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setEditingCrew(crew)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                    title="Edit crew"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setConfirmDeleteCrew(crew)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                    title="Delete crew"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-slate-900">{crew.todayJobsCompleted}/{crew.todayJobsCount}</p>
-                    <p className="text-xs text-slate-400">jobs today</p>
-                  </div>
-                </div>
-              </div>
+      {/* Loading state */}
+      {isLoading && <LoadingSpinner size="lg" label="Loading crews…" fullPage />}
 
-              {/* Members */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Members</p>
-                  <button
-                    onClick={() => setAddingMemberCrewId(crew.id)}
-                    className="flex items-center gap-1 text-xs text-primary hover:text-primary-dark font-medium transition-colors"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    Add
-                  </button>
+      {/* Error state */}
+      {!isLoading && isError && (
+        <Card padding="lg">
+          <EmptyState
+            icon={<AlertCircle className="w-6 h-6" />}
+            title="Couldn't load crews"
+            description="Something went wrong while fetching crews. Please try again."
+          />
+        </Card>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !isError && crews.length === 0 && (
+        <Card padding="lg">
+          <EmptyState
+            icon={<Users className="w-6 h-6" />}
+            title="No crews yet"
+            description="Create your first crew to start assigning jobs and team members."
+            action="Add Crew"
+            onAction={() => setShowAddCrew(true)}
+          />
+        </Card>
+      )}
+
+      {/* Crew Cards */}
+      {!isLoading && !isError && crews.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {crews.map((crew) => {
+            const statusBadge = getCrewStatusBadge(crew.status);
+            return (
+              <Card key={crew.id} padding="lg">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">{crew.name}</h3>
+                      <Badge variant={statusBadge.variant}>
+                        {statusBadge.label}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Zone: {crew.serviceZone}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setEditingCrew(crew)}
+                      className="p-1.5 rounded-lg text-slate-400 dark:text-gray-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                      title="Edit crew"
+                      aria-label={`Edit ${crew.name}`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteCrew(crew)}
+                      className="p-1.5 rounded-lg text-slate-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                      title="Delete crew"
+                      aria-label={`Delete ${crew.name}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{crew.todayJobsCompleted}/{crew.todayJobsCount}</p>
+                      <p className="text-xs text-slate-400 dark:text-gray-500">jobs today</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  {crew.members.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between text-sm group">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                          {getInitials(m.name)}
+
+                {/* Members */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Members</p>
+                    <button
+                      onClick={() => setAddingMemberCrewId(crew.id)}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary-dark font-medium transition-colors"
+                      aria-label={`Add member to ${crew.name}`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Add
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {crew.members.map((m) => (
+                      <div key={m.id} className="flex items-center justify-between text-sm group">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                            {getInitials(m.name)}
+                          </div>
+                          <span className="text-slate-700 dark:text-gray-300">{m.name}</span>
+                          <span className="text-xs text-slate-400 dark:text-gray-500">({m.role})</span>
+                          {m.clockedIn && (
+                            <span className="w-2 h-2 rounded-full bg-success" title="Clocked in" />
+                          )}
                         </div>
-                        <span className="text-slate-700">{m.name}</span>
-                        <span className="text-xs text-slate-400">({m.role})</span>
-                        {m.clockedIn && (
-                          <span className="w-2 h-2 rounded-full bg-success" title="Clocked in" />
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 text-xs text-slate-400 dark:text-gray-500">
+                            <Phone className="w-3 h-3" /> {m.phone}
+                          </span>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => setEditingMember({ crewId: crew.id, member: m })}
+                              className="p-1 rounded text-slate-400 dark:text-gray-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                              title="Edit member"
+                              aria-label={`Edit ${m.name}`}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmRemove({ crewId: crew.id, member: m })}
+                              className="p-1 rounded text-slate-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                              title="Remove member"
+                              aria-label={`Remove ${m.name}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Specialties */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Specialties</p>
+                  <div className="flex flex-wrap gap-2">
+                    {crew.specialties.map((s) => {
+                      const svcConfig = SERVICE_TYPES[s as ServiceType];
+                      return (
+                        <Badge key={s} variant="info">
+                          {svcConfig?.label ?? s}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Equipment */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Equipment</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {crew.equipment.map((eq) => (
+                      <div key={eq.id} className="flex items-center gap-1.5 text-xs">
+                        <div className={`w-1.5 h-1.5 rounded-full ${eq.status === 'available' || eq.status === 'in-use' ? 'bg-success' : 'bg-warning'}`} />
+                        <span className="text-slate-600 dark:text-gray-400">{eq.name}</span>
+                        {eq.status === 'maintenance' && (
+                          <span className="text-[10px] text-warning font-medium">(maint.)</span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
-                          <Phone className="w-3 h-3" /> {m.phone}
-                        </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => setEditingMember({ crewId: crew.id, member: m })}
-                            className="p-1 rounded text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                            title="Edit member"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => setConfirmRemove({ crewId: crew.id, member: m })}
-                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                            title="Remove member"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Performance */}
+                <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{crew.efficiency}%</p>
+                      <p className="text-[10px] text-slate-400 dark:text-gray-500">efficiency</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Specialties */}
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Specialties</p>
-                <div className="flex flex-wrap gap-2">
-                  {crew.specialties.map((s) => {
-                    const svcConfig = SERVICE_TYPES[s as ServiceType];
-                    return (
-                      <Badge key={s} variant="info">
-                        {svcConfig?.label ?? s}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Equipment */}
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Equipment</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {crew.equipment.map((eq) => (
-                    <div key={eq.id} className="flex items-center gap-1.5 text-xs">
-                      <div className={`w-1.5 h-1.5 rounded-full ${eq.status === 'available' || eq.status === 'in-use' ? 'bg-success' : 'bg-warning'}`} />
-                      <span className="text-slate-600">{eq.name}</span>
-                      {eq.status === 'maintenance' && (
-                        <span className="text-[10px] text-warning font-medium">(maint.)</span>
-                      )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{crew.todayJobsCompleted}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-gray-500">completed</p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{crew.members.length}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-gray-500">members</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-              {/* Performance */}
-              <div className="flex items-center gap-6 pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{crew.efficiency}%</p>
-                    <p className="text-[10px] text-slate-400">efficiency</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-success" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{crew.todayJobsCompleted}</p>
-                    <p className="text-[10px] text-slate-400">completed</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{crew.members.length}</p>
-                    <p className="text-[10px] text-slate-400">members</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Add Crew Modal */}
+      {showAddCrew && (
+        <AddCrewModal
+          isOpen={true}
+          onClose={() => setShowAddCrew(false)}
+        />
+      )}
 
       {/* Edit Crew Modal */}
       {editingCrew && (
@@ -570,24 +654,53 @@ export default function Crews() {
         />
       )}
 
-      {/* Remove Confirmation Modal */}
+      {/* Remove Member Confirmation Modal */}
       {confirmRemove && (
         <Modal isOpen={true} onClose={() => setConfirmRemove(null)} title="Remove Member" size="sm">
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
-              Are you sure you want to remove <span className="font-semibold text-slate-900">{confirmRemove.member.name}</span> from this crew?
+            <p className="text-sm text-slate-600 dark:text-gray-400">
+              Are you sure you want to remove <span className="font-semibold text-slate-900 dark:text-white">{confirmRemove.member.name}</span> from this crew?
             </p>
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setConfirmRemove(null)}>Cancel</Button>
               <Button
                 variant="danger"
                 icon={<Trash2 className="w-4 h-4" />}
+                disabled={removeCrewMember.isPending}
                 onClick={() => {
-                  removeCrewMember(confirmRemove.crewId, confirmRemove.member.id);
-                  setConfirmRemove(null);
+                  removeCrewMember.mutate(
+                    { crewId: confirmRemove.crewId, memberId: confirmRemove.member.id },
+                    { onSuccess: () => setConfirmRemove(null) },
+                  );
                 }}
               >
-                Remove
+                {removeCrewMember.isPending ? 'Removing…' : 'Remove'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Crew Confirmation Modal */}
+      {confirmDeleteCrew && (
+        <Modal isOpen={true} onClose={() => setConfirmDeleteCrew(null)} title="Delete Crew" size="sm">
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 dark:text-gray-400">
+              Are you sure you want to delete <span className="font-semibold text-slate-900 dark:text-white">{confirmDeleteCrew.name}</span>? This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setConfirmDeleteCrew(null)}>Cancel</Button>
+              <Button
+                variant="danger"
+                icon={<Trash2 className="w-4 h-4" />}
+                disabled={deleteCrew.isPending}
+                onClick={() => {
+                  deleteCrew.mutate(confirmDeleteCrew.id, {
+                    onSuccess: () => setConfirmDeleteCrew(null),
+                  });
+                }}
+              >
+                {deleteCrew.isPending ? 'Deleting…' : 'Delete'}
               </Button>
             </div>
           </div>
