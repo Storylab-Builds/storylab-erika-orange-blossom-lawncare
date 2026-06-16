@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useDashboardStats, useDailyMetrics } from '@/hooks';
-import { useTodayJobs, useWeather, useActivities } from '@/hooks';
-import { crews } from '@/data/mockData';
+import { useTodayJobs, useWeather, useActivities, useCrews } from '@/hooks';
 import { formatCurrency, getRelativeTime } from '@/lib/utils';
 import type { DashboardStats, Activity } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -51,6 +50,7 @@ export default function Dashboard() {
   const { data: weather, isLoading: weatherLoading } = useWeather();
   const { data: metrics } = useDailyMetrics(7);
   const { data: activities, isError: activitiesError } = useActivities(8);
+  const { data: crews } = useCrews();
 
   // Time slots for the schedule timeline (stable, hoisted before any early return)
   const timeSlots = useMemo(() => [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], []);
@@ -88,7 +88,7 @@ export default function Dashboard() {
 
   const overviewCards = [
     { label: 'Jobs Scheduled', value: String(stats?.todayJobs ?? 0), change: `${stats?.todayCompleted ?? 0} completed`, icon: CalendarCheck, color: 'bg-primary' },
-    { label: 'Crews Active', value: `${stats?.activeCrews ?? 0}/${stats?.totalCrews ?? 0}`, change: `${crews.filter(c => c.status === 'break').length} on break`, icon: Users, color: 'bg-success' },
+    { label: 'Crews Active', value: `${stats?.activeCrews ?? 0}/${stats?.totalCrews ?? 0}`, change: `${(crews ?? []).filter(c => c.status === 'break').length} on break`, icon: Users, color: 'bg-success' },
     { label: 'Weather Impact', value: getWeatherImpactLabel(stats?.weatherImpact ?? 'none'), change: `${stats?.pendingNotifications ?? 0} pending alerts`, icon: CloudRain, color: 'bg-warning' },
     { label: 'Weekly Revenue', value: formatCurrency(stats?.weeklyRevenue ?? 0), change: `+${stats?.weeklyRevenueChange ?? 0}% vs last week`, icon: DollarSign, color: 'bg-primary-dark' },
   ];

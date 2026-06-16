@@ -9,9 +9,8 @@ import {
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { useDailyMetrics, useRevenueData, useCrewUtilization } from '@/hooks';
+import { useDailyMetrics, useRevenueData, useCrewUtilization, useCustomers } from '@/hooks';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { customers } from '@/data/mockData';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Card from '@/components/ui/Card';
 import StatsCard from '@/components/StatsCard';
@@ -20,6 +19,7 @@ export default function Reports() {
   const { data: metrics, isLoading: metricsLoading } = useDailyMetrics(30);
   const { totalRevenue, avgDailyRevenue, data: revenueData, isLoading: revenueLoading } = useRevenueData(30);
   const { data: crewUtilData, isLoading: crewLoading } = useCrewUtilization();
+  const { data: customers } = useCustomers();
 
   if (metricsLoading || revenueLoading) {
     return <LoadingSpinner fullPage label="Loading reports..." />;
@@ -29,7 +29,7 @@ export default function Reports() {
   const avgEfficiency = metrics
     ? Math.round(metrics.reduce((sum, m) => sum + m.crewUtilization, 0) / metrics.length)
     : 0;
-  const activeCustomerCount = customers.filter((c) => c.status === 'active').length;
+  const activeCustomerCount = (customers ?? []).filter((c) => c.status === 'active').length;
 
   // Revenue chart data (memoized on stable query data to avoid Recharts re-animation)
   const revenueChartData = useMemo(

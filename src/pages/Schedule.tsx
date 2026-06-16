@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { format, addDays, subDays, startOfWeek } from 'date-fns';
-import { useJobs, useWeather } from '@/hooks';
-import { crews } from '@/data/mockData';
+import { useJobs, useWeather, useCrews } from '@/hooks';
 import { SERVICE_TYPES } from '@/lib/constants';
 import type { Job } from '@/types';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -16,12 +15,14 @@ function getServiceColor(type: Job['serviceType']): string {
 
 export default function Schedule() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
-  const [visibleCrews, setVisibleCrews] = useState<Set<string>>(() =>
-    new Set(crews.map((c) => c.id)),
-  );
+  // Track crews the user has explicitly hidden; everything is visible by default
+  // (works even before live crew data has loaded).
+  const [hiddenCrews, setHiddenCrews] = useState<Set<string>>(() => new Set());
+
+  const isCrewVisible = (crewId: string) => !hiddenCrews.has(crewId);
 
   const toggleCrew = (crewId: string) => {
-    setVisibleCrews((prev) => {
+    setHiddenCrews((prev) => {
       const next = new Set(prev);
       if (next.has(crewId)) next.delete(crewId);
       else next.add(crewId);
@@ -34,6 +35,7 @@ export default function Schedule() {
   // Fetch all jobs (no date filter so we get the full week)
   const { data: allJobs, isLoading } = useJobs();
   const { data: weather } = useWeather();
+  const crews = useCrews().data ?? [];
 
   if (isLoading) {
     return <LoadingSpinner fullPage label="Loading schedule..." />;
@@ -88,7 +90,7 @@ export default function Schedule() {
                 <label key={crew.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={visibleCrews.has(crew.id)}
+                    checked={isCrewVisible(crew.id)}
                     onChange={() => toggleCrew(crew.id)}
                     aria-label={`Show ${crew.name}`}
                     className="w-4 h-4 rounded border-slate-300 dark:border-gray-600 text-primary focus:ring-primary/20"
@@ -149,7 +151,7 @@ export default function Schedule() {
               {days.map((day, dayIdx) => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const dayJobs = (allJobs ?? []).filter(
-                  (j) => j.scheduledDate === dateStr && visibleCrews.has(j.crewId),
+                  (j) => j.scheduledDate === dateStr && isCrewVisible(j.crewId),
                 );
 
                 // Group by crew
